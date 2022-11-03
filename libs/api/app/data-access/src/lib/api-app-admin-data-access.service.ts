@@ -1,12 +1,12 @@
 import { ApiCoreDataAccessService } from '@kin-kinetic/api/core/data-access'
 import { UserRole } from '@kin-kinetic/api/user/data-access'
-import { WalletType } from '@kin-kinetic/api/wallet/data-access'
 import { Keypair } from '@kin-kinetic/keypair'
 import { BadRequestException, Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import slugify from 'slugify'
 import { ApiAppDataAccessService } from './api-app-data-access.service'
-import { AppCreateInput } from './dto/app-create.input'
+import { AdminAppCreateInput } from './dto/admin-app-create.input'
+import { AdminAppUpdateInput } from './dto/admin-app-update.input'
 import { AppUserRole } from './entity/app-user-role.enum'
 
 @Injectable()
@@ -19,7 +19,7 @@ export class ApiAppAdminDataAccessService implements OnModuleInit {
     await this.configureProvisionedApps()
   }
 
-  async adminCreateApp(userId: string, input: AppCreateInput) {
+  async adminCreateApp(userId: string, input: AdminAppCreateInput) {
     await this.data.ensureAdminUser(userId)
     const app = await this.data.getAppByIndex(input.index)
     if (app) {
@@ -36,7 +36,7 @@ export class ApiAppAdminDataAccessService implements OnModuleInit {
       const mints = []
       const wallets = []
       for (const mint of enabledMints) {
-        const generated = await this.adminGenerateWallet(userId, input.index)
+        const generated = await this.data.generateAppWallet(userId, input.index)
         mints.push({
           addMemo: mint.addMemo,
           order: mint.order,
@@ -60,6 +60,7 @@ export class ApiAppAdminDataAccessService implements OnModuleInit {
     const data: Prisma.AppCreateInput = {
       index: input.index,
       name: input.name,
+      logoUrl: input.logoUrl,
       users: { create: { role: AppUserRole.Owner, userId } },
       envs: { create: envs },
     }
@@ -93,12 +94,20 @@ export class ApiAppAdminDataAccessService implements OnModuleInit {
     return created
   }
 
+  async adminUpdateApp(userId: string, appId: string, input: AdminAppUpdateInput) {
+    await this.ensureAppById(userId, appId)
+    return this.data.app.update({
+      data: { ...input },
+      where: { id: appId },
+    })
+  }
+
   async adminDeleteApp(userId: string, appId: string) {
     await this.ensureAppById(userId, appId)
     await this.data.appUser.deleteMany({ where: { appId } })
-    await this.data.appTransactionError.deleteMany({ where: { appTransaction: { appEnv: { appId } } } })
-    await this.data.appTransaction.deleteMany({ where: { appEnv: { appId } } })
-    await this.data.appWebhook.deleteMany({ where: { appEnv: { appId } } })
+    await this.data.transactionError.deleteMany({ where: { transaction: { appEnv: { appId } } } })
+    await this.data.transaction.deleteMany({ where: { appEnv: { appId } } })
+    await this.data.webhook.deleteMany({ where: { appEnv: { appId } } })
     await this.data.appEnv.deleteMany({ where: { appId } })
     return this.data.app.delete({ where: { id: appId } })
   }
@@ -116,7 +125,7 @@ export class ApiAppAdminDataAccessService implements OnModuleInit {
     return this.data.getAppById(appId)
   }
 
-  private async ensureAppById(userId: string, appId: string) {
+  async ensureAppById(userId: string, appId: string) {
     await this.data.ensureAdminUser(userId)
     const app = await this.data.app.findUnique({ where: { id: appId } })
     if (!app) {
@@ -133,7 +142,7 @@ export class ApiAppAdminDataAccessService implements OnModuleInit {
         const found = await this.data.getAppByIndex(app.index)
         if (found) {
           const { publicKey } = Keypair.fromByteArray(app.feePayerByteArray)
-          this.logger.verbose(
+          this.logger.log(
             `Provisioned app ${app.index} (${app.name}) found: ${publicKey} ${found.envs
               .map((env) => `=> ${env.name}: ${env.mints.map((mint) => mint.mint.symbol).join(', ')}`)
               .join(', ')}`,
@@ -146,26 +155,9 @@ export class ApiAppAdminDataAccessService implements OnModuleInit {
             })
             adminId = admin.id
           }
-          await this.adminCreateApp(adminId, { index: app.index, name: app.name })
+          await this.adminCreateApp(adminId, { index: app.index, name: app.name, logoUrl: app?.logoUrl })
         }
       }),
     )
-  }
-
-  private async adminGenerateWallet(userId: string, index: number) {
-    await this.data.ensureAdminUser(userId)
-    const { publicKey, secretKey } = this.getAppKeypair(index)
-
-    return this.data.wallet.create({ data: { secretKey, publicKey, type: WalletType.Provisioned, ownerId: userId } })
-  }
-
-  private getAppKeypair(index: number): Keypair {
-    const envVar = process.env[`APP_${index}_FEE_PAYER_BYTE_ARRAY`]
-    if (envVar) {
-      this.logger.verbose(`getAppKeypair app ${index}: read from env var`)
-      return Keypair.fromByteArray(JSON.parse(envVar))
-    }
-    this.logger.verbose(`getAppKeypair app ${index}: generated new keypair`)
-    return Keypair.random()
   }
 }

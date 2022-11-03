@@ -1,27 +1,28 @@
 import { Solana } from '@kin-kinetic/solana'
-import { AppConfig, AppTransaction, BalanceResponse, HistoryResponse } from '../generated'
-export type { AppConfig, AppTransaction, BalanceResponse, HistoryResponse } from '../generated'
+import { AppConfig, Transaction, BalanceResponse, GetTransactionResponse, HistoryResponse } from '../generated'
+import { NAME, VERSION } from '../version'
 import { getSolanaRpcEndpoint } from './helpers'
-import { parseKineticSdkConfig } from './helpers/parse-kinetic-sdk-config'
+import { validateKineticSdkConfig } from './helpers/validate-kinetic-sdk-config'
 import {
   CreateAccountOptions,
   GetBalanceOptions,
   GetHistoryOptions,
   GetTokenAccountsOptions,
+  GetTransactionOptions,
   KineticSdkConfig,
-  KineticSdkConfigParsed,
   MakeTransferBatchOptions,
   MakeTransferOptions,
   RequestAirdropOptions,
 } from './interfaces'
 import { KineticSdkInternal } from './kinetic-sdk-internal'
+import './kinetic-sdk-polyfills'
 
 export class KineticSdk {
   solana: Solana | undefined
 
   private readonly internal: KineticSdkInternal
 
-  constructor(readonly sdkConfig: KineticSdkConfigParsed) {
+  constructor(readonly sdkConfig: KineticSdkConfig) {
     this.internal = new KineticSdkInternal(sdkConfig)
   }
 
@@ -37,7 +38,7 @@ export class KineticSdk {
     return this.sdkConfig.solanaRpcEndpoint
   }
 
-  createAccount(options: CreateAccountOptions): Promise<AppTransaction> {
+  createAccount(options: CreateAccountOptions): Promise<Transaction> {
     return this.internal.createAccount(options)
   }
 
@@ -57,11 +58,15 @@ export class KineticSdk {
     return this.internal.getTokenAccounts(options)
   }
 
-  makeTransfer(options: MakeTransferOptions): Promise<AppTransaction> {
+  getTransaction(options: GetTransactionOptions): Promise<GetTransactionResponse> {
+    return this.internal.getTransaction(options)
+  }
+
+  makeTransfer(options: MakeTransferOptions): Promise<Transaction> {
     return this.internal.makeTransfer(options)
   }
 
-  makeTransferBatch(options: MakeTransferBatchOptions): Promise<AppTransaction> {
+  makeTransferBatch(options: MakeTransferBatchOptions): Promise<Transaction> {
     return this.internal.makeTransferBatch(options)
   }
 
@@ -71,6 +76,7 @@ export class KineticSdk {
 
   async init(): Promise<AppConfig> {
     try {
+      this.sdkConfig?.logger?.log(`${NAME}: initializing ${NAME}@${VERSION}`)
       const config = await this.internal.getAppConfig(this.sdkConfig.environment, this.sdkConfig.index)
       this.sdkConfig.solanaRpcEndpoint = this.sdkConfig.solanaRpcEndpoint
         ? getSolanaRpcEndpoint(this.sdkConfig.solanaRpcEndpoint)
@@ -78,7 +84,7 @@ export class KineticSdk {
 
       this.solana = new Solana(this.sdkConfig.solanaRpcEndpoint, { logger: this.sdkConfig?.logger })
       this.sdkConfig?.logger?.log(
-        `KineticSdk: endpoint '${this.sdkConfig.endpoint}', environment '${this.sdkConfig.environment}', index: ${config.app.index}`,
+        `${NAME}: endpoint '${this.sdkConfig.endpoint}', environment '${this.sdkConfig.environment}', index: ${config.app.index}`,
       )
       return config
     } catch (e) {
@@ -88,13 +94,13 @@ export class KineticSdk {
   }
 
   static async setup(config: KineticSdkConfig): Promise<KineticSdk> {
-    const sdk = new KineticSdk(parseKineticSdkConfig(config))
+    const sdk = new KineticSdk(validateKineticSdkConfig(config))
     try {
-      await sdk.init().then(() => config.logger?.log(`KineticSdk: Setup done.`))
+      await sdk.init().then(() => config.logger?.log(`${NAME}: Setup done.`))
       return sdk
     } catch (e) {
-      config.logger?.error(`KineticSdk: Error setting up SDK.`, e)
-      throw new Error(`KineticSdk: Error setting up SDK.`)
+      config.logger?.error(`${NAME}: Error setting up SDK.`, e)
+      throw new Error(`${NAME}: Error setting up SDK.`)
     }
   }
 }

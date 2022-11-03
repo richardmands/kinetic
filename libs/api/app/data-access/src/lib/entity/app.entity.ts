@@ -15,6 +15,10 @@ export class App {
   @Field(() => Int)
   index: number
   @Field({ nullable: true })
+  logoUrl: string
+  @Field(() => Int)
+  maxEnvs: number
+  @Field({ nullable: true })
   name: string
   @Field(() => [AppUser], { nullable: true })
   users?: AppUser[]

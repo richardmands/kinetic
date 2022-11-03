@@ -4,16 +4,23 @@
   "projectType": "application",
   "targets": {
     "serve-api": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "commands": ["nx run api:serve"],
-        "readyWhen": "API is running"
+        "readyWhen": "API is listening"
       }
     },
     "e2e": {
       "executor": "@kin-kinetic-dev/jest:build",
       "options": {
         "devServerTarget": "sdk-e2e:serve-api",
+        "jestConfig": "apps/sdk-e2e/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "e2e-local": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
         "jestConfig": "apps/sdk-e2e/jest.config.js",
         "passWithNoTests": true
       }

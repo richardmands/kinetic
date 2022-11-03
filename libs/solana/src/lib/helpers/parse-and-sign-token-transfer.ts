@@ -1,16 +1,16 @@
-import { decodeTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { decodeTransferCheckedInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { AccountMeta, Keypair, Transaction } from '@solana/web3.js'
 import { parseAndSignTransaction } from './parse-and-sign-transaction'
 
 export function parseAndSignTokenTransfer({ tx, signer }: { tx: Buffer; signer: Keypair }): {
-  amount: number
+  amount: bigint
   blockhash: string
   destination: AccountMeta
   feePayer: string
   source: string
   transaction: Transaction
 } {
-  const { feePayer, source, transaction } = parseAndSignTransaction({ tx, signer })
+  const { blockhash, feePayer, source, transaction } = parseAndSignTransaction({ tx, signer })
 
   // Get the first token account transfer
   const instruction = transaction.instructions.find(
@@ -20,18 +20,15 @@ export function parseAndSignTokenTransfer({ tx, signer }: { tx: Buffer; signer: 
     throw new Error(`parseAndSignTokenTransfer: Can't find token transfer instruction`)
   }
 
-  if (!transaction.recentBlockhash) {
-    throw new Error(`parseAndSignTokenTransfer: Can't find recentBlockhash`)
-  }
   // Get the amount and destination from the instruction
   const {
     data: { amount },
     keys: { destination },
-  } = decodeTransferInstruction(instruction, TOKEN_PROGRAM_ID)
+  } = decodeTransferCheckedInstruction(instruction, TOKEN_PROGRAM_ID)
 
   return {
-    amount: Number(amount),
-    blockhash: transaction.recentBlockhash.toString(),
+    amount,
+    blockhash,
     destination,
     feePayer,
     source,

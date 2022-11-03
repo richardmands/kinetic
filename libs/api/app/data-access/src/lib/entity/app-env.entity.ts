@@ -13,8 +13,22 @@ export class AppEnv {
   updatedAt?: Date
   @Field({ nullable: true })
   name: string
+  @Field(() => [String], { nullable: true })
+  ipsAllowed?: string[]
+  @Field(() => [String], { nullable: true })
+  ipsBlocked?: string[]
+  @Field(() => [String], { nullable: true })
+  uasAllowed?: string[]
+  @Field(() => [String], { nullable: true })
+  uasBlocked?: string[]
   @Field({ nullable: true })
-  webhookAcceptIncoming?: boolean
+  webhookBalanceEnabled?: boolean
+  @Field({ nullable: true })
+  webhookBalanceUrl?: string
+  @Field({ nullable: true })
+  webhookBalanceThreshold?: string
+  @Field({ nullable: true })
+  webhookDebugging?: boolean
   @Field({ nullable: true })
   webhookEventEnabled?: boolean
   @Field({ nullable: true })

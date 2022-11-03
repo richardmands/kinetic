@@ -2,7 +2,7 @@ import { Commitment } from '@kin-kinetic/solana'
 import { ApiProperty } from '@nestjs/swagger'
 
 export class MakeTransferRequest {
-  @ApiProperty({ enum: Commitment })
+  @ApiProperty({ enum: Commitment, enumName: 'Commitment' })
   commitment: Commitment
   @ApiProperty()
   environment: string
@@ -12,10 +12,10 @@ export class MakeTransferRequest {
   mint: string
   @ApiProperty({ type: 'integer' })
   lastValidBlockHeight: number
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ nullable: true, required: false })
   referenceId?: string
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ nullable: true, required: false })
   referenceType?: string
-  @ApiProperty({ type: 'string', format: 'byte' })
+  @ApiProperty()
   tx: string
 }

@@ -1,4 +1,4 @@
-import { ProvisionedApp } from '../entities/provisioned-app.entity'
+import { ProvisionedApp } from '../entity/provisioned-app.entity'
 
 export function getProvisionedApps(envVars: string[]): ProvisionedApp[] {
   const appInfo = envVars.filter((item) => item.startsWith('APP_'))
@@ -15,5 +15,6 @@ export function getProvisionedApps(envVars: string[]): ProvisionedApp[] {
     feePayerByteArray: JSON.parse(process.env[`APP_${index}_FEE_PAYER_BYTE_ARRAY`]),
     index,
     name: process.env[`APP_${index}_NAME`],
+    logoUrl: process.env[`APP_${index}_LOGO_URL`],
   }))
 }

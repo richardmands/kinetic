@@ -1,71 +1,70 @@
-import { createMintKin, createMintSol, createMintUsdc } from '@kin-kinetic/api/cluster/util'
+import { getProvisionedClusters, ProvisionedCluster } from '@kin-kinetic/api/cluster/util'
 import { ApolloDriverConfig } from '@nestjs/apollo'
 import { INestApplication, Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-import { ClusterStatus, ClusterType, Prisma } from '@prisma/client'
+import { UserRole } from '@prisma/client'
 import { CookieOptions } from 'express-serve-static-core'
 import * as fs from 'fs'
 import { join } from 'path'
-import { ProvisionedApp } from './entities/provisioned-app.entity'
+import { ProvisionedApp } from './entity/provisioned-app.entity'
+import { WebConfig } from './entity/web-config.entity'
+import { getAuthUsers } from './helpers/get-auth-users'
 import { getProvisionedApps } from './helpers/get-provisioned-apps'
 
 @Injectable()
 export class ApiConfigDataAccessService {
   private readonly logger = new Logger(ApiConfigDataAccessService.name)
-  readonly clusters: Prisma.ClusterCreateInput[] = [
-    this.isProduction
-      ? undefined
-      : {
-          id: 'local',
-          name: 'Local',
-          endpointPrivate: 'http://localhost:8899',
-          endpointPublic: 'http://localhost:8899',
-          explorer: 'https://explorer.solana.com/{path}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899',
-          type: ClusterType.Custom,
-          status: ClusterStatus.Active,
-        },
-    {
-      id: 'solana-devnet',
-      name: 'Solana Devnet',
-      endpointPrivate: this.solanaDevnetRpcEndpoint,
-      endpointPublic: this.solanaDevnetRpcEndpoint,
-      explorer: 'https://explorer.solana.com/{path}?cluster=devnet',
-      type: ClusterType.SolanaDevnet,
-    },
-    {
-      id: 'solana-mainnet',
-      name: 'Solana Mainnet',
-      endpointPrivate: this.solanaMainnetRpcEndpoint,
-      endpointPublic: this.solanaMainnetRpcEndpoint,
-      explorer: 'https://explorer.solana.com/{path}',
-      type: ClusterType.SolanaMainnet,
-      status: ClusterStatus.Inactive,
-    },
-  ]
-  readonly mints: Prisma.MintCreateInput[] = [
-    ...(!this.isProduction
-      ? [
-          createMintKin('local', 0, 'MoGaMuJnB3k8zXjBYBnHxHG47vWcW3nyb7bFYvdVzek', 5),
-          createMintSol('local', 1),
-          createMintUsdc('local', 2, 'USDzo281m7rjzeZyxevkzL1vr5Cibb9ek3ynyAjXjUM', 2),
-        ]
-      : []),
-    createMintKin('solana-devnet', 0, this.defaultMintPublicKey, this.defaultMintDecimals),
-    createMintKin('solana-mainnet', 0, 'kinXdEcpDQeHPEuQnqmUgtYykqKGVFq6CeVX5iAHJq6', 5),
-    createMintSol('solana-devnet', 1),
-    createMintSol('solana-mainnet', 1),
-  ]
   readonly provisionedApps: ProvisionedApp[] = getProvisionedApps(Object.keys(process.env))
+  readonly provisionedClusters: ProvisionedCluster[] = getProvisionedClusters({
+    isProduction: this.isProduction,
+    solanaDevnetEnabled: this.solanaDevnetEnabled,
+    solanaDevnetRpcEndpoint: this.solanaDevnetRpcEndpoint,
+    solanaLocalEnabled: this.solanaLocalEnabled,
+    solanaLocalRpcEndpoint: this.solanaLocalRpcEndpoint,
+    solanaMainnetEnabled: this.solanaMainnetEnabled,
+    solanaMainnetRpcEndpoint: this.solanaMainnetRpcEndpoint,
+  })
 
   constructor(private readonly config: ConfigService) {}
 
-  get adminUsername(): string {
-    return this.config.get('admin.username')
+  get authPasswordEnabled(): boolean {
+    return this.config.get('auth.passwordEnabled')
   }
 
-  get adminPassword(): string {
-    return this.config.get('admin.password')
+  get authUsers(): { username: string; password: string; role: UserRole; email?: string; avatarUrl?: string }[] {
+    const users = this.config.get('auth.users')
+
+    if (users.length < 1) {
+      this.logger.warn('No users configured for auth')
+      return []
+    }
+
+    return getAuthUsers(users)
+  }
+
+  get apiLogColor() {
+    return this.config.get('api.log.color')
+  }
+
+  get apiLogJson() {
+    return this.config.get('api.log.json')
+  }
+
+  get apiLogLevel() {
+    return this.config.get('api.log.level')
+  }
+
+  get apiName(): string {
+    return this.config.get('api.name')
+  }
+
+  get apiUrl(): string {
+    return this.config.get('api.url')
+  }
+
+  get apiVersion(): string {
+    return this.config.get('api.version')
   }
 
   get cookieDomains(): string[] {
@@ -83,40 +82,80 @@ export class ApiConfigDataAccessService {
     }
     return {
       httpOnly: true,
-      secure: false,
+      secure: true,
       domain: found || this.cookieDomains[0],
+      sameSite: this.cookieDomains?.length > 1 ? 'none' : 'strict',
     }
   }
 
   get cors() {
     return {
       credentials: true,
-      origin: this.corsOrigins,
+      origin: (origin, callback) => {
+        this.logger.verbose(`CORS request from origin ${origin}, enabled bypass: ${this.corsBypass}`)
+        return callback(null, this.corsBypass ? origin : this.corsOrigins)
+      },
     }
   }
 
+  get corsBypass(): boolean {
+    return this.config.get('cors.bypass')
+  }
+
   get corsOrigins(): string[] {
-    return this.config.get('cors.origin')
+    return this.config.get('cors.origins')
   }
 
-  get defaultMintAirdropAmount(): number {
-    return this.config.get('defaultMintAirdropAmount')
+  get discordCallbackUrl() {
+    return this.apiUrl + '/auth/discord/callback'
   }
 
-  get defaultMintAirdropMax(): number {
-    return this.config.get('defaultMintAirdropMax')
+  get discordClientId(): string {
+    return this.config.get('discord.clientId')
   }
 
-  get defaultMintDecimals(): number {
-    return this.config.get('defaultMintDecimals')
+  get discordClientSecret(): string {
+    return this.config.get('discord.clientSecret')
   }
 
-  get defaultMintPublicKey(): string {
-    return this.config.get('defaultMintPublicKey')
+  get discordEnabled(): boolean {
+    return this.config.get('discord.enabled') && !!this.discordClientId && !!this.discordClientSecret
   }
 
   get environment() {
     return this.config.get('environment')
+  }
+
+  get githubCallbackUrl() {
+    return this.apiUrl + '/auth/github/callback'
+  }
+
+  get githubClientId(): string {
+    return this.config.get('github.clientId')
+  }
+
+  get githubClientSecret(): string {
+    return this.config.get('github.clientSecret')
+  }
+
+  get githubEnabled(): boolean {
+    return this.config.get('github.enabled') && !!this.githubClientId && !!this.githubClientSecret
+  }
+
+  get googleCallbackUrl() {
+    return this.apiUrl + '/auth/google/callback'
+  }
+
+  get googleClientId(): string {
+    return this.config.get('google.clientId')
+  }
+
+  get googleClientSecret(): string {
+    return this.config.get('google.clientSecret')
+  }
+
+  get googleEnabled(): boolean {
+    return this.config.get('google.enabled') && !!this.googleClientId && !!this.googleClientSecret
   }
 
   get graphqlConfig(): ApolloDriverConfig {
@@ -133,12 +172,31 @@ export class ApiConfigDataAccessService {
     return this.environment === 'development'
   }
 
+  get metricsConfig(): { enabled: boolean; port: number } {
+    return {
+      enabled: this.metricsEnabled,
+      port: this.metricsPort,
+    }
+  }
+
   get metricsEnabled(): boolean {
-    return this.config.get('metricsEnabled')
+    return this.config.get('metrics.enabled')
+  }
+
+  get metricsEndpointEnabled(): boolean {
+    return this.config.get('metrics.endpointEnabled')
+  }
+
+  get metricsPort(): number {
+    return this.config.get('metrics.port')
   }
 
   get isProduction(): boolean {
     return this.environment === 'production'
+  }
+
+  get host() {
+    return this.config.get('host')
   }
 
   get port() {
@@ -149,30 +207,58 @@ export class ApiConfigDataAccessService {
     return 'api'
   }
 
+  get solanaDevnetEnabled(): boolean {
+    return this.config.get('solana.devnet.enabled')
+  }
   get solanaDevnetRpcEndpoint() {
-    return this.config.get('solanaDevnetRpcEndpoint')
+    return this.config.get('solana.devnet.rpcEndpoint')
+  }
+
+  get solanaLocalEnabled(): boolean {
+    return this.config.get('solana.local.enabled')
+  }
+
+  get solanaLocalRpcEndpoint() {
+    return this.config.get('solana.local.rpcEndpoint')
+  }
+
+  get solanaMainnetEnabled(): boolean {
+    return this.config.get('solana.mainnet.enabled')
   }
 
   get solanaMainnetRpcEndpoint() {
-    return this.config.get('solanaMainnetRpcEndpoint')
+    return this.config.get('solana.mainnet.rpcEndpoint')
+  }
+
+  webConfig(): WebConfig {
+    return {
+      discordEnabled: this.discordEnabled,
+      githubEnabled: this.githubEnabled,
+      googleEnabled: this.googleEnabled,
+      passwordEnabled: this.authPasswordEnabled,
+    }
+  }
+
+  get webUrl(): string {
+    return this.config.get('web.url')
   }
 
   configSummary() {
     return {
       environment: this.environment,
-      port: this.port,
+      name: this.config.get('api.name'),
+      version: this.config.get('api.version'),
     }
   }
 
   configureSwagger(app: INestApplication) {
     const config = new DocumentBuilder()
-      .setTitle('Kinetic')
-      .setDescription('The OpenAPI definition of the Kinetic API')
-      .setVersion('1.0')
-      .addTag('kinetic')
-      .addServer('https://devnet.kinetic.kin.org')
-      .addServer('https://mainnet.kinetic.kin.org')
       .addServer('http://localhost:3000')
+      .addServer('https://sandbox.kinetic.host')
+      .addTag('kinetic')
+      .setDescription('The OpenAPI definition of the Kinetic API')
+      .setTitle(this.apiName)
+      .setVersion(this.apiVersion)
       .build()
     const document = SwaggerModule.createDocument(app, config)
     if (this.isDevelopment) {

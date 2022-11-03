@@ -1,30 +1,56 @@
 import { ApiConfigDataAccessService } from '@kin-kinetic/api/config/data-access'
-import { OpenTelementrySdk } from '@kin-kinetic/api/core/util'
+import { OpenTelemetrySdk } from '@kin-kinetic/api/core/util'
 import { Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
+import { OgmaService } from '@ogma/nestjs-module'
 import { exec } from 'child_process'
 import cookieParser from 'cookie-parser'
 import redirectSSL from 'redirect-ssl'
 import { AppModule } from './app/app.module'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create(AppModule, { bufferLogs: true })
   const config = app.get(ApiConfigDataAccessService)
-  await OpenTelementrySdk.start(config.metricsEnabled)
+  const logger = app.get<OgmaService>(OgmaService)
+  app.useLogger(logger)
+  await OpenTelemetrySdk.start(config.metricsConfig)
   app.setGlobalPrefix(config.prefix)
   app.useGlobalPipes(new ValidationPipe({ transform: true }))
   app.enableCors(config.cors)
   app.use(redirectSSL.create({ enabled: config.isProduction }))
   config.configureSwagger(app)
   app.use(cookieParser())
+  const host = `http://${config.host}:${config.port}`
   try {
-    await app.listen(config.port)
+    await app.listen(config.port, config.host)
+    Logger.log(`🚀 API is listening on ${host}/${config.prefix}.`)
+    Logger.log(`🚀 Admin API is listening on ${host}/graphql.`)
+    Logger.log(`🔋 API_URL: ${config.apiUrl}`)
+    Logger.log(`🔋 WEB_URL: ${config.webUrl}`)
+    Logger.log(`🔋 COOKIE_DOMAINS: ${config.cookieDomains.join(', ')}`)
     Logger.log(
-      `🚀 API is running on http://localhost:${config.port}/${config.prefix}. CORS ${
-        config?.corsOrigins ? `enabled for: [${config?.corsOrigins?.join(', ')}]` : 'disabled'
-      }. Cookie domains: [${config?.cookieDomains?.join(', ')}].`,
+      `🔋 CORS: ${
+        config.corsBypass
+          ? 'Bypassed'
+          : config?.corsOrigins
+          ? `enabled for: ${Array.isArray(config?.corsOrigins) ? config?.corsOrigins?.join(', ') : config?.corsOrigins}`
+          : 'disabled'
+      }`,
     )
-    Logger.log(`🚀 Admin API is running on http://localhost:${config.port}/graphql.`)
+
+    Logger.log(`🔐 Password Authentication ${config.authPasswordEnabled ? `ENABLED` : `DISABLED`}`)
+    Logger.log(
+      `🔐 Discord Authentication ${
+        config.discordEnabled ? `ENABLED. Callback ${config.discordCallbackUrl}` : 'DISABLED'
+      }`,
+    )
+    Logger.log(
+      `🔐 GitHub Authentication ${config.githubEnabled ? `ENABLED. Callback ${config.githubCallbackUrl}` : 'DISABLED'}`,
+    )
+    Logger.log(
+      `🔐 Google Authentication ${config.googleEnabled ? `ENABLED. Callback ${config.googleCallbackUrl}` : 'DISABLED'}`,
+    )
+
     if (config.isDevelopment) {
       exec('prettier --write ./api-schema.graphql ./api-swagger.json', { cwd: process.cwd() })
     }

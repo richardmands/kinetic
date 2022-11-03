@@ -1,28 +1,29 @@
-import { generateKinMemoInstruction } from '@kin-tools/kin-transaction'
-import { createTransferInstruction, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { createTransferCheckedInstruction, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js'
 import { GenerateMakeTransferBatchTransactionsOptions } from '../interfaces'
+import { generateKinMemoInstruction } from '../kin/generate-kin-memo-instruction'
 import { addDecimals } from './add-remove-decimals'
 import { getPublicKey } from './get-public-key'
 
 export async function generateMakeTransferBatchTransaction({
   addMemo,
-  appIndex,
+  blockhash,
   destinations,
+  index,
   lastValidBlockHeight,
-  latestBlockhash,
   mintDecimals,
   mintFeePayer,
   mintPublicKey,
-  signer,
+  owner,
   type,
 }: GenerateMakeTransferBatchTransactionsOptions): Promise<Transaction> {
   // Create objects from Response
   const mintKey = getPublicKey(mintPublicKey)
   const feePayerKey = getPublicKey(mintFeePayer)
+  const ownerPublicKey = owner.publicKey
 
   // Get TokenAccount from Owner
-  const ownerTokenAccount = await getAssociatedTokenAddress(mintKey, signer.publicKey)
+  const ownerTokenAccount = await getAssociatedTokenAddress(mintKey, ownerPublicKey)
 
   // Get TokenAccount from Destination
   const destinationInfo: { amount: number; destination: PublicKey }[] = await Promise.all(
@@ -38,7 +39,7 @@ export async function generateMakeTransferBatchTransaction({
   if (addMemo) {
     instructions.push(
       generateKinMemoInstruction({
-        appIndex,
+        index,
         type,
       }),
     )
@@ -46,19 +47,28 @@ export async function generateMakeTransferBatchTransaction({
 
   destinationInfo.map(({ amount, destination }) =>
     instructions.push(
-      createTransferInstruction(ownerTokenAccount, destination, signer.publicKey, amount, [], TOKEN_PROGRAM_ID),
+      createTransferCheckedInstruction(
+        ownerTokenAccount,
+        mintKey,
+        destination,
+        ownerPublicKey,
+        amount,
+        mintDecimals,
+        [],
+        TOKEN_PROGRAM_ID,
+      ),
     ),
   )
 
   const transaction = new Transaction({
-    blockhash: latestBlockhash,
+    blockhash,
     feePayer: feePayerKey,
     lastValidBlockHeight,
-    signatures: [{ publicKey: signer.publicKey, signature: null }],
+    signatures: [{ publicKey: ownerPublicKey, signature: null }],
   }).add(...instructions)
 
   // Partially sign the transaction
-  transaction.partialSign(signer)
+  transaction.partialSign(owner)
 
   return transaction
 }

@@ -1,16 +1,17 @@
-import {
-  ApiAppDataAccessService,
-  AppTransaction,
-  AppTransactionStatus,
-  parseError,
-} from '@kin-kinetic/api/app/data-access'
+import { ApiAppDataAccessService } from '@kin-kinetic/api/app/data-access'
 import { ApiCoreDataAccessService } from '@kin-kinetic/api/core/data-access'
+import {
+  ApiTransactionDataAccessService,
+  Transaction,
+  TransactionWithErrors,
+} from '@kin-kinetic/api/transaction/data-access'
 import { Keypair } from '@kin-kinetic/keypair'
-import { BalanceSummary, Commitment, parseAndSignTransaction, PublicKeyString } from '@kin-kinetic/solana'
+import { BalanceMint, BalanceSummary, Commitment, parseAndSignTransaction, PublicKeyString } from '@kin-kinetic/solana'
 import { Injectable, OnModuleInit } from '@nestjs/common'
 import { Counter } from '@opentelemetry/api-metrics'
+import { Request } from 'express'
 import { CreateAccountRequest } from './dto/create-account-request.dto'
-import { HistoryResponse } from './entities/history.entity'
+import { HistoryResponse } from './entities/history-response.entity'
 
 @Injectable()
 export class ApiAccountDataAccessService implements OnModuleInit {
@@ -19,7 +20,11 @@ export class ApiAccountDataAccessService implements OnModuleInit {
   private createAccountSolanaTransactionSuccessCounter: Counter
   private createAccountSolanaTransactionErrorCounter: Counter
 
-  constructor(readonly data: ApiCoreDataAccessService, private readonly app: ApiAppDataAccessService) {}
+  constructor(
+    readonly data: ApiCoreDataAccessService,
+    private readonly app: ApiAppDataAccessService,
+    private readonly transaction: ApiTransactionDataAccessService,
+  ) {}
 
   onModuleInit() {
     const prefix = 'api_account_create_account'
@@ -53,7 +58,7 @@ export class ApiAccountDataAccessService implements OnModuleInit {
     const solana = await this.data.getSolanaConnection(environment, index)
     const appEnv = await this.app.getAppConfig(environment, index)
 
-    const mints = appEnv.mints.map(({ publicKey }) => publicKey)
+    const mints: BalanceMint[] = appEnv.mints.map(({ decimals, publicKey }) => ({ decimals, publicKey }))
 
     return solana.getBalance(accountId, mints)
   }
@@ -84,56 +89,51 @@ export class ApiAccountDataAccessService implements OnModuleInit {
     return solana.getTokenAccounts(accountId, mint.toString())
   }
 
-  async createAccount(input: CreateAccountRequest): Promise<AppTransaction> {
-    const solana = await this.data.getSolanaConnection(input.environment, input.index)
+  async createAccount(req: Request, input: CreateAccountRequest): Promise<Transaction> {
     const { appEnv, appKey } = await this.data.getAppEnvironment(input.environment, input.index)
     this.createAccountRequestCounter.add(1, { appKey })
 
-    const created = await this.data.appTransaction.create({
-      data: { appEnvId: appEnv.id },
-      include: { errors: true },
+    const { ip, ua } = this.transaction.validateRequest(appEnv, req)
+
+    const mint = this.transaction.validateMint(appEnv, appKey, input.mint)
+
+    // Create the Transaction
+    const transaction: TransactionWithErrors = await this.transaction.createTransaction({
+      appEnvId: appEnv.id,
+      commitment: input.commitment,
+      ip,
+      referenceId: input.referenceId,
+      referenceType: input.referenceType,
+      tx: input.tx,
+      ua,
     })
-    const mint = appEnv.mints.find(({ mint }) => mint.address === input.mint)
-    if (!mint) {
-      this.createAccountErrorMintNotFoundCounter.add(1, { appKey })
-      throw new Error(`Can't find mint ${input.mint} in environment ${input.environment} for index ${input.index}`)
-    }
+
+    // Process the Solana transaction
     const signer = Keypair.fromSecretKey(mint.wallet?.secretKey)
 
-    const { feePayer, source, transaction } = parseAndSignTransaction({
+    const {
+      blockhash,
+      feePayer,
+      source,
+      transaction: solanaTransaction,
+    } = parseAndSignTransaction({
       tx: Buffer.from(input.tx, 'base64'),
       signer: signer.solana,
     })
-    let errors
 
-    let status: AppTransactionStatus
-    let signature: string
-
-    const solanaStart = new Date()
-
-    try {
-      signature = await solana.sendRawTransaction(transaction)
-      status = AppTransactionStatus.Committed
-      this.createAccountSolanaTransactionSuccessCounter.add(1, { appKey })
-    } catch (error) {
-      status = AppTransactionStatus.Failed
-      this.createAccountSolanaTransactionErrorCounter.add(1, { appKey })
-      errors = { create: parseError(error) }
-    }
-
-    return this.data.appTransaction.update({
-      where: { id: created.id },
-      data: {
-        errors,
-        feePayer,
-        mint: mint.mint.address,
-        signature,
-        solanaStart,
-        solanaCommitted: new Date(),
-        source,
-        status,
-      },
-      include: { errors: true },
+    return this.transaction.handleTransaction({
+      appEnv,
+      appKey,
+      transaction,
+      blockhash,
+      commitment: input?.commitment,
+      decimals: mint?.mint?.decimals,
+      feePayer,
+      headers: req.headers as Record<string, string>,
+      lastValidBlockHeight: input?.lastValidBlockHeight,
+      mintPublicKey: mint?.mint?.address,
+      solanaTransaction,
+      source,
     })
   }
 }

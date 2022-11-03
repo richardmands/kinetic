@@ -2,17 +2,15 @@ import {
   ApiAppUserDataAccessService,
   App,
   AppEnv,
-  AppEnvUpdateInput,
   AppMint,
-  AppMintUpdateInput,
-  AppTransaction,
-  AppTransactionCounter,
-  AppTransactionListInput,
-  AppUpdateInput,
-  AppUserAddInput,
-  AppUserRemoveInput,
   AppUserRole,
-  AppUserUpdateRoleInput,
+  UserAppEnvCreateInput,
+  UserAppEnvUpdateInput,
+  UserAppMintUpdateInput,
+  UserAppUpdateInput,
+  UserAppUserAddInput,
+  UserAppUserRemoveInput,
+  UserAppUserUpdateRoleInput,
 } from '@kin-kinetic/api/app/data-access'
 import { ApiAuthGraphqlGuard, CtxUser } from '@kin-kinetic/api/auth/data-access'
 import { User } from '@kin-kinetic/api/user/data-access'
@@ -37,45 +35,24 @@ export class ApiAppUserFeatureResolver {
   userAppRole(@CtxUser() user: User, @Args('appId') appId: string) {
     return this.service.userAppRole(user.id, appId)
   }
-
-  @Query(() => AppTransaction, { nullable: true })
-  userAppTransaction(
-    @CtxUser() user: User,
-    @Args('appId') appId: string,
-    @Args('appEnvId') appEnvId: string,
-    @Args('appTransactionId') appTransactionId: string,
-  ) {
-    return this.service.userAppTransaction(user.id, appId, appEnvId, appTransactionId)
-  }
-
-  @Query(() => [AppTransaction], { nullable: true })
-  userAppTransactions(
-    @CtxUser() user: User,
-    @Args('appId') appId: string,
-    @Args('appEnvId') appEnvId: string,
-    @Args({ name: 'input', type: () => AppTransactionListInput, nullable: true }) input: AppTransactionListInput,
-  ) {
-    return this.service.userAppTransactions(user.id, appId, appEnvId, input)
-  }
-
-  @Query(() => AppTransactionCounter, { nullable: true })
-  userAppTransactionCounter(
-    @CtxUser() user: User,
-    @Args('appId') appId: string,
-    @Args('appEnvId') appEnvId: string,
-    @Args({ name: 'input', type: () => AppTransactionListInput, nullable: true }) input: AppTransactionListInput,
-  ) {
-    return this.service.userAppTransactionCounter(user.id, appId, appEnvId, input)
-  }
-
   @Query(() => [App], { nullable: true })
   userApps(@CtxUser() user: User) {
     return this.service.userApps(user.id)
   }
 
   @Mutation(() => App, { nullable: true })
-  userUpdateApp(@CtxUser() user: User, @Args('appId') appId: string, @Args('input') input: AppUpdateInput) {
+  userUpdateApp(@CtxUser() user: User, @Args('appId') appId: string, @Args('input') input: UserAppUpdateInput) {
     return this.service.userUpdateApp(user.id, appId, input)
+  }
+
+  @Mutation(() => AppEnv, { nullable: true })
+  userCreateAppEnv(
+    @CtxUser() user: User,
+    @Args('appId') appId: string,
+    @Args('clusterId') clusterId: string,
+    @Args('input') input: UserAppEnvCreateInput,
+  ) {
+    return this.service.userCreateAppEnv(user.id, appId, clusterId, input)
   }
 
   @Mutation(() => AppEnv, { nullable: true })
@@ -83,7 +60,7 @@ export class ApiAppUserFeatureResolver {
     @CtxUser() user: User,
     @Args('appId') appId: string,
     @Args('appEnvId') appEnvId: string,
-    @Args('input') input: AppEnvUpdateInput,
+    @Args('input') input: UserAppEnvUpdateInput,
   ) {
     return this.service.userUpdateAppEnv(user.id, appId, appEnvId, input)
   }
@@ -93,7 +70,7 @@ export class ApiAppUserFeatureResolver {
     @CtxUser() user: User,
     @Args('appId') appId: string,
     @Args('appMintId') appMintId: string,
-    @Args('input') input: AppMintUpdateInput,
+    @Args('input') input: UserAppMintUpdateInput,
   ) {
     return this.service.userUpdateAppMint(user.id, appId, appMintId, input)
   }
@@ -150,12 +127,12 @@ export class ApiAppUserFeatureResolver {
   }
 
   @Mutation(() => App, { nullable: true })
-  userAppUserAdd(@CtxUser() user: User, @Args('appId') appId: string, @Args('input') input: AppUserAddInput) {
+  userAppUserAdd(@CtxUser() user: User, @Args('appId') appId: string, @Args('input') input: UserAppUserAddInput) {
     return this.service.userAppUserAdd(user.id, appId, input)
   }
 
   @Mutation(() => App, { nullable: true })
-  userAppUserRemove(@CtxUser() user: User, @Args('appId') appId: string, @Args('input') input: AppUserRemoveInput) {
+  userAppUserRemove(@CtxUser() user: User, @Args('appId') appId: string, @Args('input') input: UserAppUserRemoveInput) {
     return this.service.userAppUserRemove(user.id, appId, input)
   }
 
@@ -163,7 +140,7 @@ export class ApiAppUserFeatureResolver {
   userAppUserUpdateRole(
     @CtxUser() user: User,
     @Args('appId') appId: string,
-    @Args('input') input: AppUserUpdateRoleInput,
+    @Args('input') input: UserAppUserUpdateRoleInput,
   ) {
     return this.service.userAppUserUpdateRole(user.id, appId, input)
   }

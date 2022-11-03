@@ -1,18 +1,18 @@
-import { TransactionType } from '@kin-tools/kin-memo'
 import { Keypair } from '@solana/web3.js'
 import { PublicKeyString } from '../interfaces'
+import { TransactionType } from '../kin'
 
 export interface GenerateMakeTransferOptions {
   addMemo: boolean
   amount: string
-  appIndex: number
+  blockhash: string
   destination: PublicKeyString
+  index: number
   lastValidBlockHeight: number
-  latestBlockhash: string
   mintDecimals: number
   mintFeePayer: PublicKeyString
   mintPublicKey: PublicKeyString
-  signer: Keypair
+  owner: Keypair
   senderCreate?: boolean
   type: TransactionType
 }

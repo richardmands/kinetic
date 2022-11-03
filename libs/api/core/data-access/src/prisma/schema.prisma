@@ -7,60 +7,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Airdrop {
-  id               String   @id @default(cuid())
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  amount           Int
-  date             String
-  fromOwner        String
-  fromPreSol       String
-  fromPreToken     String
-  fromPostSol      String
-  fromPostToken    String
-  fromTokenAccount String
-  mintId           String
-  signature        String
-  toOwner          String
-  toPreSol         String
-  toPreToken       String
-  toPostSol        String
-  toPostToken      String
-  toTokenAccount   String
-}
-
 model App {
   id        String    @id @default(cuid())
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   envs      AppEnv[]
   index     Int       @unique
+  logoUrl   String?
+  maxEnvs   Int       @default(5)
   name      String
   users     AppUser[]
 }
 
 model AppEnv {
-  id                    String           @id @default(cuid())
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
-  name                  String
-  mints                 AppMint[]
-  transaction           AppTransaction[]
-  webhookAcceptIncoming Boolean          @default(false)
-  webhookEventEnabled   Boolean          @default(false)
-  webhookEventUrl       String?
-  webhookSecret         String?
-  webhookVerifyEnabled  Boolean          @default(false)
-  webhookVerifyUrl      String?
-  webhooks              AppWebhook[]
-  app                   App              @relation(fields: [appId], references: [id])
-  appId                 String
-  cluster               Cluster          @relation(fields: [clusterId], references: [id])
-  clusterId             String
-  walletBalances        WalletBalance[]
-  wallets               Wallet[]
+  id                      String          @id @default(cuid())
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+  name                    String
+  ipsAllowed              String[]
+  ipsBlocked              String[]
+  mints                   AppMint[]
+  transaction             Transaction[]
+  uasAllowed              String[]
+  uasBlocked              String[]
+  webhookBalanceEnabled   Boolean         @default(false)
+  webhookBalanceUrl       String?
+  webhookBalanceThreshold String?
+  webhookDebugging        Boolean         @default(false)
+  webhookEventEnabled     Boolean         @default(false)
+  webhookEventUrl         String?
+  webhookSecret           String?
+  webhookVerifyEnabled    Boolean         @default(false)
+  webhookVerifyUrl        String?
+  webhooks                Webhook[]
+  app                     App             @relation(fields: [appId], references: [id])
+  appId                   String
+  cluster                 Cluster         @relation(fields: [clusterId], references: [id])
+  clusterId               String
+  walletBalances          WalletBalance[]
+  wallets                 Wallet[]
 
-  @@unique([appId, clusterId])
   @@unique([appId, name])
 }
 
@@ -78,103 +64,6 @@ model AppMint {
   walletId  String?
 
   @@unique([order, appEnvId])
-}
-
-model AppTransaction {
-  id                      String                    @id @default(cuid())
-  createdAt               DateTime                  @default(now())
-  updatedAt               DateTime                  @updatedAt
-  amount                  String?
-  commitment              AppTransactionCommitment?
-  destination             String?
-  errors                  AppTransactionError[]
-  feePayer                String?
-  mint                    String?
-  processingDuration      Int?
-  referenceId             String?
-  referenceType           String?
-  signature               String?
-  solanaCommitted         DateTime?
-  solanaCommittedDuration Int?
-  solanaConfirmed         DateTime?
-  solanaFinalized         DateTime?
-  solanaFinalizedDuration Int?
-  solanaStart             DateTime?
-  solanaTransaction       Json?
-  source                  String?
-  status                  AppTransactionStatus      @default(Processing)
-  totalDuration           Int?
-  webhooks                AppWebhook[]
-  webhookEventStart       DateTime?
-  webhookEventEnd         DateTime?
-  webhookEventDuration    Int?
-  webhookVerifyStart      DateTime?
-  webhookVerifyEnd        DateTime?
-  webhookVerifyDuration   Int?
-  appEnv                  AppEnv?                   @relation(fields: [appEnvId], references: [id])
-  appEnvId                String?
-}
-
-enum AppTransactionCommitment {
-  Confirmed
-  Finalized
-  Processed
-}
-
-enum AppTransactionStatus {
-  Committed
-  Confirmed
-  Failed
-  Finalized
-  Processing
-}
-
-enum AppTransactionErrorType {
-  BadNonce
-  InvalidAccount
-  SomeError
-  Timeout
-  Unknown
-  WebhookFailed
-}
-
-model AppTransactionError {
-  id               String                  @id @default(cuid())
-  logs             String[]
-  message          String
-  type             AppTransactionErrorType @default(Unknown)
-  instruction      Int?
-  appTransaction   AppTransaction          @relation(fields: [appTransactionId], references: [id])
-  appTransactionId String
-}
-
-model AppWebhook {
-  id               String              @id @default(cuid())
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  direction        AppWebhookDirection
-  headers          Json?
-  payload          Json?
-  referenceId      String?
-  referenceType    String?
-  responsePayload  Json?
-  responseError    String?
-  responseStatus   Int?
-  type             AppWebhookType
-  appEnv           AppEnv?             @relation(fields: [appEnvId], references: [id])
-  appEnvId         String?
-  appTransaction   AppTransaction      @relation(fields: [appTransactionId], references: [id])
-  appTransactionId String
-}
-
-enum AppWebhookDirection {
-  Incoming
-  Outgoing
-}
-
-enum AppWebhookType {
-  Event
-  Verify
 }
 
 model AppUser {
@@ -199,7 +88,6 @@ model Cluster {
   id              String        @id @default(cuid())
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @default(now()) @updatedAt
-  enableStats     Boolean       @default(false)
   endpointPrivate String
   endpointPublic  String
   explorer        String
@@ -208,19 +96,6 @@ model Cluster {
   name            String
   status          ClusterStatus @default(Active)
   type            ClusterType
-  stats           ClusterStat[]
-}
-
-model ClusterStat {
-  id               String   @id @default(cuid())
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @default(now()) @updatedAt
-  numSlots         Int
-  numTransactions  Int
-  samplePeriodSecs Int
-  slot             Int
-  cluster          Cluster  @relation(fields: [clusterId], references: [id])
-  clusterId        String
 }
 
 enum ClusterStatus {
@@ -266,18 +141,91 @@ enum MintType {
   SplToken
 }
 
+model Transaction {
+  id                      String                 @id @default(cuid())
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  amount                  String?
+  commitment              TransactionCommitment?
+  decimals                Int?
+  destination             String?
+  errors                  TransactionError[]
+  feePayer                String?
+  ip                      String?
+  mint                    String?
+  processingDuration      Int?
+  referenceId             String?
+  referenceType           String?
+  signature               String?
+  solanaCommitted         DateTime?
+  solanaCommittedDuration Int?
+  solanaConfirmed         DateTime?
+  solanaFinalized         DateTime?
+  solanaFinalizedDuration Int?
+  solanaStart             DateTime?
+  solanaTransaction       Json?
+  source                  String?
+  status                  TransactionStatus      @default(Processing)
+  totalDuration           Int?
+  tx                      String?
+  ua                      String?
+  webhooks                Webhook[]
+  webhookEventStart       DateTime?
+  webhookEventEnd         DateTime?
+  webhookEventDuration    Int?
+  webhookVerifyStart      DateTime?
+  webhookVerifyEnd        DateTime?
+  webhookVerifyDuration   Int?
+  appEnv                  AppEnv?                @relation(fields: [appEnvId], references: [id])
+  appEnvId                String?
+}
+
+enum TransactionCommitment {
+  Confirmed
+  Finalized
+  Processed
+}
+
+enum TransactionStatus {
+  Committed
+  Confirmed
+  Failed
+  Finalized
+  Processing
+}
+
+enum TransactionErrorType {
+  BadNonce
+  InvalidAccount
+  SomeError
+  Timeout
+  Unknown
+  WebhookFailed
+}
+
+model TransactionError {
+  id            String               @id @default(cuid())
+  logs          String[]
+  message       String
+  type          TransactionErrorType @default(Unknown)
+  instruction   Int?
+  transaction   Transaction          @relation(fields: [transactionId], references: [id])
+  transactionId String
+}
+
 model User {
-  id        String      @id @default(cuid())
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @default(now()) @updatedAt
-  avatarUrl String?
-  name      String?
-  password  String?
-  role      UserRole
-  username  String      @unique
-  apps      AppUser[]   @relation()
-  emails    UserEmail[] @relation()
-  Wallet    Wallet[]
+  id         String         @id @default(cuid())
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @default(now()) @updatedAt
+  avatarUrl  String?
+  name       String?
+  password   String?
+  role       UserRole
+  username   String         @unique
+  apps       AppUser[]      @relation()
+  emails     UserEmail[]    @relation()
+  identities UserIdentity[]
+  wallets    Wallet[]
 }
 
 model UserEmail {
@@ -287,6 +235,23 @@ model UserEmail {
   email     String   @unique
   owner     User     @relation(fields: [ownerId], references: [id])
   ownerId   String
+}
+
+model UserIdentity {
+  id         String           @id @default(cuid())
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @default(now()) @updatedAt
+  type       UserIdentityType
+  externalId String
+  profile    Json?
+  owner      User             @relation(fields: [ownerId], references: [id])
+  ownerId    String
+}
+
+enum UserIdentityType {
+  Discord
+  GitHub
+  Google
 }
 
 enum UserRole {
@@ -324,4 +289,34 @@ model WalletBalance {
   appEnvId  String?
   wallet    Wallet?  @relation(fields: [walletId], references: [id])
   walletId  String?
+}
+
+model Webhook {
+  id              String           @id @default(cuid())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  direction       WebhookDirection
+  headers         Json?
+  payload         Json?
+  referenceId     String?
+  referenceType   String?
+  responsePayload Json?
+  responseError   String?
+  responseStatus  Int?
+  type            WebhookType
+  appEnv          AppEnv?          @relation(fields: [appEnvId], references: [id])
+  appEnvId        String?
+  transaction     Transaction?     @relation(fields: [transactionId], references: [id])
+  transactionId   String?
+}
+
+enum WebhookDirection {
+  Incoming
+  Outgoing
+}
+
+enum WebhookType {
+  Balance
+  Event
+  Verify
 }

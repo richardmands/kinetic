@@ -4,6 +4,19 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["nx run keypair:update-version", "nx run keypair:build-lib"],
+        "outputPath": "dist/libs/keypair"
+      }
+    },
+    "update-version": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn update-version keypair"
+      }
+    },
+    "build-lib": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
@@ -24,7 +37,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/libs/keypair"],
+      "outputs": ["{workspaceRoot}/coverage/libs/keypair"],
       "options": {
         "jestConfig": "libs/keypair/jest.config.ts",
         "passWithNoTests": true

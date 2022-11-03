@@ -4,6 +4,19 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["nx run sdk:update-version", "nx run sdk:build-lib"],
+        "outputPath": "dist/libs/sdk"
+      }
+    },
+    "update-version": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn update-version sdk"
+      }
+    },
+    "build-lib": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
@@ -24,7 +37,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/libs/sdk"],
+      "outputs": ["{workspaceRoot}/coverage/libs/sdk"],
       "options": {
         "jestConfig": "libs/sdk/jest.config.ts",
         "passWithNoTests": true

@@ -1,8 +1,8 @@
+import { HDKey } from 'micro-ed25519-hdkey'
 import * as bip39 from '@scure/bip39'
 import { wordlist } from '@scure/bip39/wordlists/english'
 import { Keypair as SolanaKeypair, PublicKey as SolanaPublicKey } from '@solana/web3.js'
 import * as bs58 from 'bs58'
-import { derivePath } from './vendor/hd-key'
 
 export { SolanaKeypair, SolanaPublicKey }
 
@@ -48,7 +48,7 @@ export class Keypair {
     // Always start with zero as minimum
     from = from < 0 ? 0 : from
     // Always generate at least 1
-    to = to <= from ? 1 : to
+    to = to <= from ? from + 1 : to
 
     const seed = bip39.mnemonicToSeedSync(mnemonic, '')
     const keys: Keypair[] = []
@@ -62,8 +62,9 @@ export class Keypair {
     return keys
   }
 
-  static derive(seed: Buffer, path: string) {
-    return Keypair.fromSeed(derivePath(path, seed.toString('hex')).key)
+  static derive(seed: Buffer, path: string): Keypair {
+    const hd = HDKey.fromMasterSeed(seed.toString('hex'))
+    return Keypair.fromSeed(Buffer.from(hd.derive(path).privateKey))
   }
 
   static fromSeed(seed: Buffer): Keypair {
@@ -76,9 +77,8 @@ export class Keypair {
 
   static random(): Keypair {
     const mnemonic = this.generateMnemonic()
-    const [kp] = this.fromMnemonicSet(mnemonic)
 
-    return kp
+    return this.fromMnemonic(mnemonic)
   }
 
   static generateMnemonic(strength: 128 | 256 = 128): string {

@@ -12,12 +12,64 @@ export type Scalars = {
   Boolean: boolean
   Int: number
   Float: number
-  /** The `BigInt` scalar type represents non-fractional signed whole numeric values. */
   BigInt: any
-  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: any
-  /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
   JSON: any
+}
+
+export type AdminAppCreateInput = {
+  index: Scalars['Int']
+  logoUrl?: InputMaybe<Scalars['String']>
+  name: Scalars['String']
+  skipWalletCreation?: InputMaybe<Scalars['Boolean']>
+}
+
+export type AdminAppUpdateInput = {
+  index?: InputMaybe<Scalars['Int']>
+  logoUrl?: InputMaybe<Scalars['String']>
+  maxEnvs?: InputMaybe<Scalars['Int']>
+  name?: InputMaybe<Scalars['String']>
+}
+
+export type AdminClusterCreateInput = {
+  endpointPrivate: Scalars['String']
+  endpointPublic: Scalars['String']
+  explorer?: InputMaybe<Scalars['String']>
+  name: Scalars['String']
+  type: ClusterType
+}
+
+export type AdminClusterUpdateInput = {
+  endpointPrivate?: InputMaybe<Scalars['String']>
+  endpointPublic?: InputMaybe<Scalars['String']>
+  explorer?: InputMaybe<Scalars['String']>
+  name?: InputMaybe<Scalars['String']>
+  status?: InputMaybe<ClusterStatus>
+}
+
+export type AdminMintCreateInput = {
+  address: Scalars['String']
+  clusterId: Scalars['String']
+  coinGeckoId?: InputMaybe<Scalars['String']>
+  decimals: Scalars['Int']
+  logoUrl?: InputMaybe<Scalars['String']>
+  name: Scalars['String']
+  symbol: Scalars['String']
+}
+
+export type AdminUserCreateInput = {
+  avatarUrl?: InputMaybe<Scalars['String']>
+  email: Scalars['String']
+  name?: InputMaybe<Scalars['String']>
+  password: Scalars['String']
+  role?: InputMaybe<UserRole>
+  username?: InputMaybe<Scalars['String']>
+}
+
+export type AdminUserUpdateInput = {
+  avatarUrl?: InputMaybe<Scalars['String']>
+  name?: InputMaybe<Scalars['String']>
+  role?: InputMaybe<UserRole>
 }
 
 export type App = {
@@ -27,16 +79,12 @@ export type App = {
   envs?: Maybe<Array<AppEnv>>
   id: Scalars['String']
   index: Scalars['Int']
+  logoUrl?: Maybe<Scalars['String']>
+  maxEnvs: Scalars['Int']
   name?: Maybe<Scalars['String']>
   settingsUrl?: Maybe<Scalars['String']>
   updatedAt: Scalars['DateTime']
   users?: Maybe<Array<AppUser>>
-}
-
-export type AppCreateInput = {
-  index: Scalars['Int']
-  name: Scalars['String']
-  skipWalletCreation?: InputMaybe<Scalars['Boolean']>
 }
 
 export type AppEnv = {
@@ -44,13 +92,21 @@ export type AppEnv = {
   app?: Maybe<App>
   cluster?: Maybe<Cluster>
   createdAt: Scalars['DateTime']
+  endpoint?: Maybe<Scalars['String']>
   id: Scalars['String']
+  ipsAllowed?: Maybe<Array<Scalars['String']>>
+  ipsBlocked?: Maybe<Array<Scalars['String']>>
   key?: Maybe<Scalars['String']>
   mints?: Maybe<Array<AppMint>>
   name?: Maybe<Scalars['String']>
+  uasAllowed?: Maybe<Array<Scalars['String']>>
+  uasBlocked?: Maybe<Array<Scalars['String']>>
   updatedAt: Scalars['DateTime']
   wallets?: Maybe<Array<Wallet>>
-  webhookAcceptIncoming?: Maybe<Scalars['Boolean']>
+  webhookBalanceEnabled?: Maybe<Scalars['Boolean']>
+  webhookBalanceThreshold?: Maybe<Scalars['String']>
+  webhookBalanceUrl?: Maybe<Scalars['String']>
+  webhookDebugging?: Maybe<Scalars['Boolean']>
   webhookEventEnabled?: Maybe<Scalars['Boolean']>
   webhookEventUrl?: Maybe<Scalars['String']>
   webhookSecret?: Maybe<Scalars['String']>
@@ -58,13 +114,18 @@ export type AppEnv = {
   webhookVerifyUrl?: Maybe<Scalars['String']>
 }
 
-export type AppEnvUpdateInput = {
-  webhookAcceptIncoming?: InputMaybe<Scalars['Boolean']>
-  webhookEventEnabled?: InputMaybe<Scalars['Boolean']>
-  webhookEventUrl?: InputMaybe<Scalars['String']>
-  webhookSecret?: InputMaybe<Scalars['String']>
-  webhookVerifyEnabled?: InputMaybe<Scalars['Boolean']>
-  webhookVerifyUrl?: InputMaybe<Scalars['String']>
+export type AppEnvStats = {
+  __typename?: 'AppEnvStats'
+  transactionCount?: Maybe<AppEnvTransactionCount>
+}
+
+export type AppEnvTransactionCount = {
+  __typename?: 'AppEnvTransactionCount'
+  Committed?: Maybe<Scalars['Int']>
+  Confirmed?: Maybe<Scalars['Int']>
+  Failed?: Maybe<Scalars['Int']>
+  Finalized?: Maybe<Scalars['Int']>
+  Processing?: Maybe<Scalars['Int']>
 }
 
 export type AppMint = {
@@ -78,83 +139,6 @@ export type AppMint = {
   wallet?: Maybe<Wallet>
 }
 
-export type AppMintUpdateInput = {
-  addMemo?: InputMaybe<Scalars['Boolean']>
-}
-
-export type AppTransaction = {
-  __typename?: 'AppTransaction'
-  amount?: Maybe<Scalars['String']>
-  createdAt?: Maybe<Scalars['DateTime']>
-  destination?: Maybe<Scalars['String']>
-  errors?: Maybe<Array<AppTransactionError>>
-  explorerUrl?: Maybe<Scalars['String']>
-  feePayer?: Maybe<Scalars['String']>
-  id?: Maybe<Scalars['String']>
-  mint?: Maybe<Scalars['String']>
-  processingDuration?: Maybe<Scalars['Int']>
-  referenceId?: Maybe<Scalars['String']>
-  referenceType?: Maybe<Scalars['String']>
-  signature?: Maybe<Scalars['String']>
-  solanaCommitted?: Maybe<Scalars['DateTime']>
-  solanaCommittedDuration?: Maybe<Scalars['Int']>
-  solanaFinalized?: Maybe<Scalars['DateTime']>
-  solanaFinalizedDuration?: Maybe<Scalars['Int']>
-  solanaStart?: Maybe<Scalars['DateTime']>
-  solanaTransaction?: Maybe<Scalars['JSON']>
-  source?: Maybe<Scalars['String']>
-  status: AppTransactionStatus
-  totalDuration?: Maybe<Scalars['Int']>
-  updatedAt?: Maybe<Scalars['DateTime']>
-  webhookEventDuration?: Maybe<Scalars['Int']>
-  webhookEventEnd?: Maybe<Scalars['DateTime']>
-  webhookEventIncoming?: Maybe<AppWebhook>
-  webhookEventOutgoing?: Maybe<AppWebhook>
-  webhookEventStart?: Maybe<Scalars['DateTime']>
-  webhookVerifyDuration?: Maybe<Scalars['Int']>
-  webhookVerifyEnd?: Maybe<Scalars['DateTime']>
-  webhookVerifyIncoming?: Maybe<AppWebhook>
-  webhookVerifyOutgoing?: Maybe<AppWebhook>
-  webhookVerifyStart?: Maybe<Scalars['DateTime']>
-}
-
-export type AppTransactionError = {
-  __typename?: 'AppTransactionError'
-  id?: Maybe<Scalars['String']>
-  instruction?: Maybe<Scalars['Int']>
-  logs?: Maybe<Array<Scalars['String']>>
-  message?: Maybe<Scalars['String']>
-  type: AppTransactionErrorType
-}
-
-export enum AppTransactionErrorType {
-  BadNonce = 'BadNonce',
-  InvalidAccount = 'InvalidAccount',
-  SomeError = 'SomeError',
-  Unknown = 'Unknown',
-  WebhookFailed = 'WebhookFailed',
-}
-
-export type AppTransactionListInput = {
-  referenceId?: InputMaybe<Scalars['String']>
-  referenceType?: InputMaybe<Scalars['String']>
-  signature?: InputMaybe<Scalars['String']>
-  source?: InputMaybe<Scalars['String']>
-  status?: InputMaybe<AppTransactionStatus>
-}
-
-export enum AppTransactionStatus {
-  Committed = 'Committed',
-  Confirmed = 'Confirmed',
-  Failed = 'Failed',
-  Finalized = 'Finalized',
-  Processing = 'Processing',
-}
-
-export type AppUpdateInput = {
-  name?: InputMaybe<Scalars['String']>
-}
-
 export type AppUser = {
   __typename?: 'AppUser'
   app?: Maybe<App>
@@ -165,47 +149,9 @@ export type AppUser = {
   user?: Maybe<User>
 }
 
-export type AppUserAddInput = {
-  role: AppUserRole
-  userId: Scalars['String']
-}
-
-export type AppUserRemoveInput = {
-  userId: Scalars['String']
-}
-
 export enum AppUserRole {
   Member = 'Member',
   Owner = 'Owner',
-}
-
-export type AppUserUpdateRoleInput = {
-  role: AppUserRole
-  userId: Scalars['String']
-}
-
-export type AppWebhook = {
-  __typename?: 'AppWebhook'
-  createdAt: Scalars['DateTime']
-  direction: AppWebhookDirection
-  headers?: Maybe<Scalars['JSON']>
-  id: Scalars['String']
-  payload?: Maybe<Scalars['JSON']>
-  responseError?: Maybe<Scalars['String']>
-  responsePayload?: Maybe<Scalars['JSON']>
-  responseStatus?: Maybe<Scalars['Int']>
-  type: AppWebhookType
-  updatedAt: Scalars['DateTime']
-}
-
-export enum AppWebhookDirection {
-  Incoming = 'Incoming',
-  Outgoing = 'Outgoing',
-}
-
-export enum AppWebhookType {
-  Event = 'Event',
-  Verify = 'Verify',
 }
 
 export type AuthToken = {
@@ -217,7 +163,6 @@ export type AuthToken = {
 export type Cluster = {
   __typename?: 'Cluster'
   createdAt?: Maybe<Scalars['DateTime']>
-  enableStats?: Maybe<Scalars['Boolean']>
   endpointPrivate?: Maybe<Scalars['String']>
   endpointPublic?: Maybe<Scalars['String']>
   explorer?: Maybe<Scalars['String']>
@@ -229,66 +174,9 @@ export type Cluster = {
   updatedAt?: Maybe<Scalars['DateTime']>
 }
 
-export type ClusterCreateInput = {
-  endpointPrivate: Scalars['String']
-  endpointPublic: Scalars['String']
-  explorer?: InputMaybe<Scalars['String']>
-  name: Scalars['String']
-  type: ClusterType
-}
-
-export type ClusterStat = {
-  __typename?: 'ClusterStat'
-  createdAt: Scalars['DateTime']
-  id: Scalars['String']
-  numSlots?: Maybe<Scalars['Float']>
-  numTransactions: Scalars['Float']
-  samplePeriodSecs: Scalars['Float']
-  slot: Scalars['Float']
-  updatedAt: Scalars['DateTime']
-}
-
 export enum ClusterStatus {
   Active = 'Active',
   Inactive = 'Inactive',
-}
-
-export type ClusterToken = {
-  __typename?: 'ClusterToken'
-  address?: Maybe<Scalars['String']>
-  decimals?: Maybe<Scalars['Int']>
-  extensions?: Maybe<ClusterTokenExtensions>
-  logoURI?: Maybe<Scalars['String']>
-  name?: Maybe<Scalars['String']>
-  symbol?: Maybe<Scalars['String']>
-  tags?: Maybe<Array<Scalars['String']>>
-}
-
-export type ClusterTokenExtensions = {
-  __typename?: 'ClusterTokenExtensions'
-  address?: Maybe<Scalars['String']>
-  assetContract?: Maybe<Scalars['String']>
-  bridgeContract?: Maybe<Scalars['String']>
-  coinGeckoId?: Maybe<Scalars['String']>
-  description?: Maybe<Scalars['String']>
-  discord?: Maybe<Scalars['String']>
-  explorer?: Maybe<Scalars['String']>
-  github?: Maybe<Scalars['String']>
-  imageUrl?: Maybe<Scalars['String']>
-  medium?: Maybe<Scalars['String']>
-  serumV3Usdc?: Maybe<Scalars['String']>
-  serumV3Usdt?: Maybe<Scalars['String']>
-  tgann?: Maybe<Scalars['String']>
-  tggroup?: Maybe<Scalars['String']>
-  twitter?: Maybe<Scalars['String']>
-  website?: Maybe<Scalars['String']>
-}
-
-export type ClusterTokenInput = {
-  address?: InputMaybe<Scalars['String']>
-  name?: InputMaybe<Scalars['String']>
-  symbol?: InputMaybe<Scalars['String']>
-  type: ClusterType
 }
 
 export enum ClusterType {
@@ -296,20 +184,6 @@ export enum ClusterType {
   SolanaDevnet = 'SolanaDevnet',
   SolanaMainnet = 'SolanaMainnet',
   SolanaTestnet = 'SolanaTestnet',
-}
-
-export type ClusterUpdateInput = {
-  enableStats?: InputMaybe<Scalars['Boolean']>
-  endpointPrivate?: InputMaybe<Scalars['String']>
-  endpointPublic?: InputMaybe<Scalars['String']>
-  explorer?: InputMaybe<Scalars['String']>
-  name?: InputMaybe<Scalars['String']>
-  status?: InputMaybe<ClusterStatus>
-}
-
-export type LoginInput = {
-  password: Scalars['String']
-  username: Scalars['String']
 }
 
 export type Mint = {
@@ -333,39 +207,44 @@ export type Mint = {
   updatedAt?: Maybe<Scalars['DateTime']>
 }
 
-export type MintAddInput = {
-  address: Scalars['String']
-  clusterId: Scalars['String']
-  name: Scalars['String']
-  symbol: Scalars['String']
-}
-
 export enum MintType {
   SplToken = 'SplToken',
 }
 
 export type Mutation = {
   __typename?: 'Mutation'
-  adminAddClusterMint?: Maybe<Cluster>
   adminCreateApp?: Maybe<App>
   adminCreateCluster?: Maybe<Cluster>
   adminCreateUser?: Maybe<User>
   adminDeleteApp?: Maybe<App>
+  adminDeleteAppEnv?: Maybe<AppEnv>
   adminDeleteCluster?: Maybe<Cluster>
   adminDeleteUser?: Maybe<User>
   adminDeleteWallet?: Maybe<Wallet>
+  adminMintCreate?: Maybe<Cluster>
+  adminUpdateApp?: Maybe<App>
   adminUpdateCluster?: Maybe<Cluster>
   adminUpdateUser?: Maybe<User>
   login?: Maybe<AuthToken>
   logout?: Maybe<Scalars['Boolean']>
+  userAppEnvAddAllowedIp?: Maybe<AppEnv>
+  userAppEnvAddAllowedUa?: Maybe<AppEnv>
+  userAppEnvAddBlockedIp?: Maybe<AppEnv>
+  userAppEnvAddBlockedUa?: Maybe<AppEnv>
   userAppEnvMintDisable?: Maybe<AppEnv>
   userAppEnvMintEnable?: Maybe<AppEnv>
   userAppEnvMintSetWallet?: Maybe<AppEnv>
+  userAppEnvRemoveAllowedIp?: Maybe<AppEnv>
+  userAppEnvRemoveAllowedUa?: Maybe<AppEnv>
+  userAppEnvRemoveBlockedIp?: Maybe<AppEnv>
+  userAppEnvRemoveBlockedUa?: Maybe<AppEnv>
   userAppEnvWalletAdd?: Maybe<AppEnv>
   userAppEnvWalletRemove?: Maybe<AppEnv>
   userAppUserAdd?: Maybe<App>
   userAppUserRemove?: Maybe<App>
   userAppUserUpdateRole?: Maybe<App>
+  userCreateAppEnv?: Maybe<AppEnv>
+  userDeleteAppEnv?: Maybe<AppEnv>
   userDeleteWallet?: Maybe<Wallet>
   userGenerateWallet?: Maybe<Wallet>
   userImportWallet?: Maybe<Wallet>
@@ -374,23 +253,24 @@ export type Mutation = {
   userUpdateAppMint?: Maybe<AppMint>
 }
 
-export type MutationAdminAddClusterMintArgs = {
-  input: MintAddInput
-}
-
 export type MutationAdminCreateAppArgs = {
-  input: AppCreateInput
+  input: AdminAppCreateInput
 }
 
 export type MutationAdminCreateClusterArgs = {
-  input: ClusterCreateInput
+  input: AdminClusterCreateInput
 }
 
 export type MutationAdminCreateUserArgs = {
-  input: UserCreateInput
+  input: AdminUserCreateInput
 }
 
 export type MutationAdminDeleteAppArgs = {
+  appId: Scalars['String']
+}
+
+export type MutationAdminDeleteAppEnvArgs = {
+  appEnvId: Scalars['String']
   appId: Scalars['String']
 }
 
@@ -406,18 +286,47 @@ export type MutationAdminDeleteWalletArgs = {
   walletId: Scalars['String']
 }
 
+export type MutationAdminMintCreateArgs = {
+  input: AdminMintCreateInput
+}
+
+export type MutationAdminUpdateAppArgs = {
+  appId: Scalars['String']
+  input: AdminAppUpdateInput
+}
+
 export type MutationAdminUpdateClusterArgs = {
   clusterId: Scalars['String']
-  input: ClusterUpdateInput
+  input: AdminClusterUpdateInput
 }
 
 export type MutationAdminUpdateUserArgs = {
-  input: UserUpdateInput
+  input: AdminUserUpdateInput
   userId: Scalars['String']
 }
 
 export type MutationLoginArgs = {
-  input: LoginInput
+  input: UserLoginInput
+}
+
+export type MutationUserAppEnvAddAllowedIpArgs = {
+  appEnvId: Scalars['String']
+  ip: Scalars['String']
+}
+
+export type MutationUserAppEnvAddAllowedUaArgs = {
+  appEnvId: Scalars['String']
+  ua: Scalars['String']
+}
+
+export type MutationUserAppEnvAddBlockedIpArgs = {
+  appEnvId: Scalars['String']
+  ip: Scalars['String']
+}
+
+export type MutationUserAppEnvAddBlockedUaArgs = {
+  appEnvId: Scalars['String']
+  ua: Scalars['String']
 }
 
 export type MutationUserAppEnvMintDisableArgs = {
@@ -439,6 +348,26 @@ export type MutationUserAppEnvMintSetWalletArgs = {
   walletId: Scalars['String']
 }
 
+export type MutationUserAppEnvRemoveAllowedIpArgs = {
+  appEnvId: Scalars['String']
+  ip: Scalars['String']
+}
+
+export type MutationUserAppEnvRemoveAllowedUaArgs = {
+  appEnvId: Scalars['String']
+  ua: Scalars['String']
+}
+
+export type MutationUserAppEnvRemoveBlockedIpArgs = {
+  appEnvId: Scalars['String']
+  ip: Scalars['String']
+}
+
+export type MutationUserAppEnvRemoveBlockedUaArgs = {
+  appEnvId: Scalars['String']
+  ua: Scalars['String']
+}
+
 export type MutationUserAppEnvWalletAddArgs = {
   appEnvId: Scalars['String']
   appId: Scalars['String']
@@ -453,17 +382,28 @@ export type MutationUserAppEnvWalletRemoveArgs = {
 
 export type MutationUserAppUserAddArgs = {
   appId: Scalars['String']
-  input: AppUserAddInput
+  input: UserAppUserAddInput
 }
 
 export type MutationUserAppUserRemoveArgs = {
   appId: Scalars['String']
-  input: AppUserRemoveInput
+  input: UserAppUserRemoveInput
 }
 
 export type MutationUserAppUserUpdateRoleArgs = {
   appId: Scalars['String']
-  input: AppUserUpdateRoleInput
+  input: UserAppUserUpdateRoleInput
+}
+
+export type MutationUserCreateAppEnvArgs = {
+  appId: Scalars['String']
+  clusterId: Scalars['String']
+  input: UserAppEnvCreateInput
+}
+
+export type MutationUserDeleteAppEnvArgs = {
+  appEnvId: Scalars['String']
+  appId: Scalars['String']
 }
 
 export type MutationUserDeleteWalletArgs = {
@@ -482,19 +422,19 @@ export type MutationUserImportWalletArgs = {
 
 export type MutationUserUpdateAppArgs = {
   appId: Scalars['String']
-  input: AppUpdateInput
+  input: UserAppUpdateInput
 }
 
 export type MutationUserUpdateAppEnvArgs = {
   appEnvId: Scalars['String']
   appId: Scalars['String']
-  input: AppEnvUpdateInput
+  input: UserAppEnvUpdateInput
 }
 
 export type MutationUserUpdateAppMintArgs = {
   appId: Scalars['String']
   appMintId: Scalars['String']
-  input: AppMintUpdateInput
+  input: UserAppMintUpdateInput
 }
 
 export type Query = {
@@ -502,27 +442,31 @@ export type Query = {
   adminApp?: Maybe<App>
   adminApps?: Maybe<Array<App>>
   adminCluster?: Maybe<Cluster>
-  adminClusterTokens?: Maybe<Array<ClusterToken>>
   adminClusters?: Maybe<Array<Cluster>>
   adminUser?: Maybe<User>
   adminUsers?: Maybe<Array<User>>
   adminWallet?: Maybe<Wallet>
   adminWalletBalances?: Maybe<Array<WalletBalance>>
   adminWallets?: Maybe<Array<Wallet>>
-  clusterStats?: Maybe<Array<ClusterStat>>
   me?: Maybe<User>
   uptime: Scalars['Float']
   userApp?: Maybe<App>
   userAppEnv?: Maybe<AppEnv>
+  userAppEnvStats?: Maybe<AppEnvStats>
   userAppRole?: Maybe<AppUserRole>
-  userAppTransaction?: Maybe<AppTransaction>
-  userAppTransactions?: Maybe<Array<AppTransaction>>
   userApps?: Maybe<Array<App>>
+  userCluster?: Maybe<Cluster>
+  userClusters?: Maybe<Array<Cluster>>
+  userSearchUsers?: Maybe<Array<User>>
+  userTransaction?: Maybe<Transaction>
+  userTransactionCounter?: Maybe<TransactionCounter>
+  userTransactions?: Maybe<Array<Transaction>>
   userWallet?: Maybe<Wallet>
   userWalletAirdrop?: Maybe<WalletAirdropResponse>
   userWalletBalance?: Maybe<WalletBalance>
   userWalletBalances?: Maybe<Array<WalletBalance>>
   userWallets?: Maybe<Array<Wallet>>
+  webConfig: WebConfig
 }
 
 export type QueryAdminAppArgs = {
@@ -531,10 +475,6 @@ export type QueryAdminAppArgs = {
 
 export type QueryAdminClusterArgs = {
   clusterId: Scalars['String']
-}
-
-export type QueryAdminClusterTokensArgs = {
-  input: ClusterTokenInput
 }
 
 export type QueryAdminUserArgs = {
@@ -550,10 +490,6 @@ export type QueryAdminWalletBalancesArgs = {
   walletId: Scalars['String']
 }
 
-export type QueryClusterStatsArgs = {
-  clusterId: Scalars['String']
-}
-
 export type QueryUserAppArgs = {
   appId: Scalars['String']
 }
@@ -563,20 +499,38 @@ export type QueryUserAppEnvArgs = {
   appId: Scalars['String']
 }
 
+export type QueryUserAppEnvStatsArgs = {
+  appEnvId: Scalars['String']
+}
+
 export type QueryUserAppRoleArgs = {
   appId: Scalars['String']
 }
 
-export type QueryUserAppTransactionArgs = {
-  appEnvId: Scalars['String']
-  appId: Scalars['String']
-  appTransactionId: Scalars['String']
+export type QueryUserClusterArgs = {
+  clusterId: Scalars['String']
 }
 
-export type QueryUserAppTransactionsArgs = {
+export type QueryUserSearchUsersArgs = {
+  input: UserSearchUserInput
+}
+
+export type QueryUserTransactionArgs = {
   appEnvId: Scalars['String']
   appId: Scalars['String']
-  input?: InputMaybe<AppTransactionListInput>
+  transactionId: Scalars['String']
+}
+
+export type QueryUserTransactionCounterArgs = {
+  appEnvId: Scalars['String']
+  appId: Scalars['String']
+  input?: InputMaybe<UserTransactionListInput>
+}
+
+export type QueryUserTransactionsArgs = {
+  appEnvId: Scalars['String']
+  appId: Scalars['String']
+  input?: InputMaybe<UserTransactionListInput>
 }
 
 export type QueryUserWalletArgs = {
@@ -604,6 +558,80 @@ export type QueryUserWalletsArgs = {
   appEnvId: Scalars['String']
 }
 
+export type Transaction = {
+  __typename?: 'Transaction'
+  amount?: Maybe<Scalars['String']>
+  createdAt?: Maybe<Scalars['DateTime']>
+  decimals?: Maybe<Scalars['Int']>
+  destination?: Maybe<Scalars['String']>
+  errors?: Maybe<Array<TransactionError>>
+  explorerUrl?: Maybe<Scalars['String']>
+  feePayer?: Maybe<Scalars['String']>
+  id?: Maybe<Scalars['String']>
+  ip?: Maybe<Scalars['String']>
+  mint?: Maybe<Scalars['String']>
+  processingDuration?: Maybe<Scalars['Int']>
+  referenceId?: Maybe<Scalars['String']>
+  referenceType?: Maybe<Scalars['String']>
+  signature?: Maybe<Scalars['String']>
+  solanaCommitted?: Maybe<Scalars['DateTime']>
+  solanaCommittedDuration?: Maybe<Scalars['Int']>
+  solanaFinalized?: Maybe<Scalars['DateTime']>
+  solanaFinalizedDuration?: Maybe<Scalars['Int']>
+  solanaStart?: Maybe<Scalars['DateTime']>
+  solanaTransaction?: Maybe<Scalars['JSON']>
+  source?: Maybe<Scalars['String']>
+  status: TransactionStatus
+  totalDuration?: Maybe<Scalars['Int']>
+  tx?: Maybe<Scalars['String']>
+  ua?: Maybe<Scalars['String']>
+  updatedAt?: Maybe<Scalars['DateTime']>
+  webhookEventDuration?: Maybe<Scalars['Int']>
+  webhookEventEnd?: Maybe<Scalars['DateTime']>
+  webhookEventIncoming?: Maybe<Webhook>
+  webhookEventOutgoing?: Maybe<Webhook>
+  webhookEventStart?: Maybe<Scalars['DateTime']>
+  webhookVerifyDuration?: Maybe<Scalars['Int']>
+  webhookVerifyEnd?: Maybe<Scalars['DateTime']>
+  webhookVerifyIncoming?: Maybe<Webhook>
+  webhookVerifyOutgoing?: Maybe<Webhook>
+  webhookVerifyStart?: Maybe<Scalars['DateTime']>
+}
+
+export type TransactionCounter = {
+  __typename?: 'TransactionCounter'
+  limit?: Maybe<Scalars['Float']>
+  page?: Maybe<Scalars['Float']>
+  pageCount?: Maybe<Scalars['Float']>
+  total?: Maybe<Scalars['Float']>
+}
+
+export type TransactionError = {
+  __typename?: 'TransactionError'
+  id?: Maybe<Scalars['String']>
+  instruction?: Maybe<Scalars['Int']>
+  logs?: Maybe<Array<Scalars['String']>>
+  message?: Maybe<Scalars['String']>
+  type: TransactionErrorType
+}
+
+export enum TransactionErrorType {
+  BadNonce = 'BadNonce',
+  InvalidAccount = 'InvalidAccount',
+  SomeError = 'SomeError',
+  Timeout = 'Timeout',
+  Unknown = 'Unknown',
+  WebhookFailed = 'WebhookFailed',
+}
+
+export enum TransactionStatus {
+  Committed = 'Committed',
+  Confirmed = 'Confirmed',
+  Failed = 'Failed',
+  Finalized = 'Finalized',
+  Processing = 'Processing',
+}
+
 export type User = {
   __typename?: 'User'
   apps?: Maybe<Array<AppUser>>
@@ -612,19 +640,50 @@ export type User = {
   email?: Maybe<Scalars['String']>
   emails?: Maybe<Array<UserEmail>>
   id: Scalars['String']
+  identities?: Maybe<Array<UserIdentity>>
   name?: Maybe<Scalars['String']>
   role?: Maybe<UserRole>
   updatedAt: Scalars['DateTime']
   username: Scalars['String']
 }
 
-export type UserCreateInput = {
-  avatarUrl?: InputMaybe<Scalars['String']>
-  email: Scalars['String']
+export type UserAppEnvCreateInput = {
+  name: Scalars['String']
+}
+
+export type UserAppEnvUpdateInput = {
+  webhookBalanceEnabled?: InputMaybe<Scalars['Boolean']>
+  webhookBalanceThreshold?: InputMaybe<Scalars['String']>
+  webhookBalanceUrl?: InputMaybe<Scalars['String']>
+  webhookDebugging?: InputMaybe<Scalars['Boolean']>
+  webhookEventEnabled?: InputMaybe<Scalars['Boolean']>
+  webhookEventUrl?: InputMaybe<Scalars['String']>
+  webhookSecret?: InputMaybe<Scalars['String']>
+  webhookVerifyEnabled?: InputMaybe<Scalars['Boolean']>
+  webhookVerifyUrl?: InputMaybe<Scalars['String']>
+}
+
+export type UserAppMintUpdateInput = {
+  addMemo?: InputMaybe<Scalars['Boolean']>
+}
+
+export type UserAppUpdateInput = {
+  logoUrl?: InputMaybe<Scalars['String']>
   name?: InputMaybe<Scalars['String']>
-  password: Scalars['String']
-  role?: InputMaybe<UserRole>
-  username?: InputMaybe<Scalars['String']>
+}
+
+export type UserAppUserAddInput = {
+  role: AppUserRole
+  userId: Scalars['String']
+}
+
+export type UserAppUserRemoveInput = {
+  userId: Scalars['String']
+}
+
+export type UserAppUserUpdateRoleInput = {
+  role: AppUserRole
+  userId: Scalars['String']
 }
 
 export type UserEmail = {
@@ -635,15 +694,47 @@ export type UserEmail = {
   updatedAt: Scalars['DateTime']
 }
 
+export type UserIdentity = {
+  __typename?: 'UserIdentity'
+  createdAt: Scalars['DateTime']
+  externalId: Scalars['String']
+  id: Scalars['String']
+  profile: Scalars['JSON']
+  type?: Maybe<UserIdentityType>
+  updatedAt: Scalars['DateTime']
+}
+
+export enum UserIdentityType {
+  Discord = 'Discord',
+  GitHub = 'GitHub',
+  Google = 'Google',
+}
+
+export type UserLoginInput = {
+  password: Scalars['String']
+  username: Scalars['String']
+}
+
 export enum UserRole {
   Admin = 'Admin',
   User = 'User',
 }
 
-export type UserUpdateInput = {
-  avatarUrl?: InputMaybe<Scalars['String']>
-  name?: InputMaybe<Scalars['String']>
-  role?: InputMaybe<UserRole>
+export type UserSearchUserInput = {
+  query?: InputMaybe<Scalars['String']>
+}
+
+export type UserTransactionListInput = {
+  destination?: InputMaybe<Scalars['String']>
+  ip?: InputMaybe<Scalars['String']>
+  limit?: InputMaybe<Scalars['Float']>
+  page?: InputMaybe<Scalars['Float']>
+  referenceId?: InputMaybe<Scalars['String']>
+  referenceType?: InputMaybe<Scalars['String']>
+  signature?: InputMaybe<Scalars['String']>
+  source?: InputMaybe<Scalars['String']>
+  status?: InputMaybe<Array<TransactionStatus>>
+  ua?: InputMaybe<Scalars['String']>
 }
 
 export type Wallet = {
@@ -680,12 +771,44 @@ export enum WalletType {
   Provisioned = 'Provisioned',
 }
 
+export type WebConfig = {
+  __typename?: 'WebConfig'
+  discordEnabled: Scalars['Boolean']
+  githubEnabled: Scalars['Boolean']
+  googleEnabled: Scalars['Boolean']
+  passwordEnabled: Scalars['Boolean']
+}
+
+export type Webhook = {
+  __typename?: 'Webhook'
+  createdAt: Scalars['DateTime']
+  direction: WebhookDirection
+  headers?: Maybe<Scalars['JSON']>
+  id: Scalars['String']
+  payload?: Maybe<Scalars['JSON']>
+  responseError?: Maybe<Scalars['String']>
+  responsePayload?: Maybe<Scalars['JSON']>
+  responseStatus?: Maybe<Scalars['Int']>
+  type: WebhookType
+  updatedAt: Scalars['DateTime']
+}
+
+export enum WebhookDirection {
+  Incoming = 'Incoming',
+  Outgoing = 'Outgoing',
+}
+
+export enum WebhookType {
+  Balance = 'Balance',
+  Event = 'Event',
+  Verify = 'Verify',
+}
+
 export const ClusterDetails = gql`
   fragment ClusterDetails on Cluster {
     id
     createdAt
     updatedAt
-    enableStats
     endpointPrivate
     endpointPublic
     explorer
@@ -746,12 +869,14 @@ export const AppEnvDetails = gql`
     id
     createdAt
     updatedAt
+    endpoint
     key
     app {
       id
       createdAt
       updatedAt
       index
+      maxEnvs
       name
     }
     cluster {
@@ -760,11 +885,18 @@ export const AppEnvDetails = gql`
         ...MintDetails
       }
     }
+    ipsAllowed
+    ipsBlocked
     mints {
       ...AppMintDetails
     }
     name
-    webhookAcceptIncoming
+    uasAllowed
+    uasBlocked
+    webhookBalanceEnabled
+    webhookBalanceUrl
+    webhookBalanceThreshold
+    webhookDebugging
     webhookEventEnabled
     webhookEventUrl
     webhookSecret
@@ -775,8 +907,25 @@ export const AppEnvDetails = gql`
   ${MintDetails}
   ${AppMintDetails}
 `
-export const AppTransactionErrorDetails = gql`
-  fragment AppTransactionErrorDetails on AppTransactionError {
+export const AppEnvTransactionCountDetails = gql`
+  fragment AppEnvTransactionCountDetails on AppEnvTransactionCount {
+    Committed
+    Confirmed
+    Failed
+    Finalized
+    Processing
+  }
+`
+export const AppEnvStatsDetails = gql`
+  fragment AppEnvStatsDetails on AppEnvStats {
+    transactionCount {
+      ...AppEnvTransactionCountDetails
+    }
+  }
+  ${AppEnvTransactionCountDetails}
+`
+export const TransactionErrorDetails = gql`
+  fragment TransactionErrorDetails on TransactionError {
     id
     logs
     message
@@ -784,8 +933,8 @@ export const AppTransactionErrorDetails = gql`
     instruction
   }
 `
-export const AppWebhookDetails = gql`
-  fragment AppWebhookDetails on AppWebhook {
+export const WebhookDetails = gql`
+  fragment WebhookDetails on Webhook {
     id
     createdAt
     updatedAt
@@ -798,18 +947,20 @@ export const AppWebhookDetails = gql`
     type
   }
 `
-export const AppTransactionDetails = gql`
-  fragment AppTransactionDetails on AppTransaction {
+export const TransactionDetails = gql`
+  fragment TransactionDetails on Transaction {
     id
     createdAt
     updatedAt
     amount
+    decimals
     destination
     errors {
-      ...AppTransactionErrorDetails
+      ...TransactionErrorDetails
     }
     explorerUrl
     feePayer
+    ip
     mint
     processingDuration
     referenceId
@@ -824,27 +975,29 @@ export const AppTransactionDetails = gql`
     source
     status
     totalDuration
+    tx
+    ua
     webhookEventDuration
     webhookEventIncoming {
-      ...AppWebhookDetails
+      ...WebhookDetails
     }
     webhookEventOutgoing {
-      ...AppWebhookDetails
+      ...WebhookDetails
     }
     webhookEventEnd
     webhookEventStart
     webhookVerifyDuration
     webhookVerifyEnd
     webhookVerifyIncoming {
-      ...AppWebhookDetails
+      ...WebhookDetails
     }
     webhookVerifyOutgoing {
-      ...AppWebhookDetails
+      ...WebhookDetails
     }
     webhookVerifyStart
   }
-  ${AppTransactionErrorDetails}
-  ${AppWebhookDetails}
+  ${TransactionErrorDetails}
+  ${WebhookDetails}
 `
 export const AppDetails = gql`
   fragment AppDetails on App {
@@ -852,6 +1005,8 @@ export const AppDetails = gql`
     createdAt
     updatedAt
     index
+    logoUrl
+    maxEnvs
     name
     defaultEnvUrl
     settingsUrl
@@ -894,51 +1049,6 @@ export const AuthTokenDetails = gql`
   }
   ${UserDetails}
 `
-export const ClusterStatDetails = gql`
-  fragment ClusterStatDetails on ClusterStat {
-    id
-    createdAt
-    updatedAt
-    numSlots
-    numTransactions
-    samplePeriodSecs
-    slot
-  }
-`
-export const ClusterTokenExtensionsDetails = gql`
-  fragment ClusterTokenExtensionsDetails on ClusterTokenExtensions {
-    address
-    assetContract
-    bridgeContract
-    coinGeckoId
-    description
-    discord
-    explorer
-    github
-    imageUrl
-    medium
-    serumV3Usdc
-    serumV3Usdt
-    tgann
-    tggroup
-    twitter
-    website
-  }
-`
-export const ClusterTokenDetails = gql`
-  fragment ClusterTokenDetails on ClusterToken {
-    address
-    name
-    decimals
-    symbol
-    logoURI
-    tags
-    extensions {
-      ...ClusterTokenExtensionsDetails
-    }
-  }
-  ${ClusterTokenExtensionsDetails}
-`
 export const UserEmailDetails = gql`
   fragment UserEmailDetails on UserEmail {
     id
@@ -962,8 +1072,28 @@ export const WalletBalanceDetails = gql`
   }
 `
 export const AdminCreateApp = gql`
-  mutation AdminCreateApp($input: AppCreateInput!) {
+  mutation AdminCreateApp($input: AdminAppCreateInput!) {
     created: adminCreateApp(input: $input) {
+      ...AppDetails
+      envs {
+        ...AppEnvDetails
+        wallets {
+          ...WalletDetails
+        }
+      }
+      users {
+        ...AppUserDetails
+      }
+    }
+  }
+  ${AppDetails}
+  ${AppEnvDetails}
+  ${WalletDetails}
+  ${AppUserDetails}
+`
+export const AdminUpdateApp = gql`
+  mutation AdminUpdateApp($appId: String!, $input: AdminAppUpdateInput!) {
+    updated: adminUpdateApp(appId: $appId, input: $input) {
       ...AppDetails
       envs {
         ...AppEnvDetails
@@ -988,6 +1118,14 @@ export const AdminDeleteApp = gql`
     }
   }
   ${AppDetails}
+`
+export const AdminDeleteAppEnv = gql`
+  mutation AdminDeleteAppEnv($appId: String!, $appEnvId: String!) {
+    deleted: adminDeleteAppEnv(appId: $appId, appEnvId: $appEnvId) {
+      ...AppEnvDetails
+    }
+  }
+  ${AppEnvDetails}
 `
 export const AdminApps = gql`
   query AdminApps {
@@ -1021,8 +1159,16 @@ export const AdminApp = gql`
   ${WalletDetails}
   ${AppUserDetails}
 `
+export const UserAppEnvStats = gql`
+  query UserAppEnvStats($appEnvId: String!) {
+    stats: userAppEnvStats(appEnvId: $appEnvId) {
+      ...AppEnvStatsDetails
+    }
+  }
+  ${AppEnvStatsDetails}
+`
 export const UserUpdateApp = gql`
-  mutation UserUpdateApp($appId: String!, $input: AppUpdateInput!) {
+  mutation UserUpdateApp($appId: String!, $input: UserAppUpdateInput!) {
     updated: userUpdateApp(appId: $appId, input: $input) {
       ...AppDetails
       envs {
@@ -1041,8 +1187,20 @@ export const UserUpdateApp = gql`
   ${WalletDetails}
   ${AppUserDetails}
 `
+export const UserCreateAppEnv = gql`
+  mutation UserCreateAppEnv($appId: String!, $clusterId: String!, $input: UserAppEnvCreateInput!) {
+    created: userCreateAppEnv(appId: $appId, clusterId: $clusterId, input: $input) {
+      ...AppEnvDetails
+      wallets {
+        ...WalletDetails
+      }
+    }
+  }
+  ${AppEnvDetails}
+  ${WalletDetails}
+`
 export const UserUpdateAppEnv = gql`
-  mutation UserUpdateAppEnv($appId: String!, $appEnvId: String!, $input: AppEnvUpdateInput!) {
+  mutation UserUpdateAppEnv($appId: String!, $appEnvId: String!, $input: UserAppEnvUpdateInput!) {
     updated: userUpdateAppEnv(appId: $appId, appEnvId: $appEnvId, input: $input) {
       ...AppEnvDetails
       wallets {
@@ -1054,7 +1212,7 @@ export const UserUpdateAppEnv = gql`
   ${WalletDetails}
 `
 export const UserUpdateAppMint = gql`
-  mutation UserUpdateAppMint($appId: String!, $appMintId: String!, $input: AppMintUpdateInput!) {
+  mutation UserUpdateAppMint($appId: String!, $appMintId: String!, $input: UserAppMintUpdateInput!) {
     updated: userUpdateAppMint(appId: $appId, appMintId: $appMintId, input: $input) {
       ...AppMintDetails
     }
@@ -1062,7 +1220,7 @@ export const UserUpdateAppMint = gql`
   ${AppMintDetails}
 `
 export const UserAppUserAdd = gql`
-  mutation UserAppUserAdd($appId: String!, $input: AppUserAddInput!) {
+  mutation UserAppUserAdd($appId: String!, $input: UserAppUserAddInput!) {
     item: userAppUserAdd(appId: $appId, input: $input) {
       ...AppDetails
       users {
@@ -1074,7 +1232,7 @@ export const UserAppUserAdd = gql`
   ${AppUserDetails}
 `
 export const UserAppUserRemove = gql`
-  mutation UserAppUserRemove($appId: String!, $input: AppUserRemoveInput!) {
+  mutation UserAppUserRemove($appId: String!, $input: UserAppUserRemoveInput!) {
     item: userAppUserRemove(appId: $appId, input: $input) {
       ...AppDetails
       users {
@@ -1086,7 +1244,7 @@ export const UserAppUserRemove = gql`
   ${AppUserDetails}
 `
 export const UserAppUserUpdateRole = gql`
-  mutation UserAppUserUpdateRole($appId: String!, $input: AppUserUpdateRoleInput!) {
+  mutation UserAppUserUpdateRole($appId: String!, $input: UserAppUserUpdateRoleInput!) {
     item: userAppUserUpdateRole(appId: $appId, input: $input) {
       ...AppDetails
       users {
@@ -1096,6 +1254,70 @@ export const UserAppUserUpdateRole = gql`
   }
   ${AppDetails}
   ${AppUserDetails}
+`
+export const UserAppEnvAddAllowedIp = gql`
+  mutation userAppEnvAddAllowedIp($appEnvId: String!, $ip: String!) {
+    item: userAppEnvAddAllowedIp(appEnvId: $appEnvId, ip: $ip) {
+      ...AppEnvDetails
+    }
+  }
+  ${AppEnvDetails}
+`
+export const UserAppEnvRemoveAllowedIp = gql`
+  mutation userAppEnvRemoveAllowedIp($appEnvId: String!, $ip: String!) {
+    item: userAppEnvRemoveAllowedIp(appEnvId: $appEnvId, ip: $ip) {
+      ...AppEnvDetails
+    }
+  }
+  ${AppEnvDetails}
+`
+export const UserAppEnvAddBlockedIp = gql`
+  mutation userAppEnvAddBlockedIp($appEnvId: String!, $ip: String!) {
+    item: userAppEnvAddBlockedIp(appEnvId: $appEnvId, ip: $ip) {
+      ...AppEnvDetails
+    }
+  }
+  ${AppEnvDetails}
+`
+export const UserAppEnvRemoveBlockedIp = gql`
+  mutation userAppEnvRemoveBlockedIp($appEnvId: String!, $ip: String!) {
+    item: userAppEnvRemoveBlockedIp(appEnvId: $appEnvId, ip: $ip) {
+      ...AppEnvDetails
+    }
+  }
+  ${AppEnvDetails}
+`
+export const UserAppEnvAddAllowedUa = gql`
+  mutation userAppEnvAddAllowedUa($appEnvId: String!, $ua: String!) {
+    item: userAppEnvAddAllowedUa(appEnvId: $appEnvId, ua: $ua) {
+      ...AppEnvDetails
+    }
+  }
+  ${AppEnvDetails}
+`
+export const UserAppEnvRemoveAllowedUa = gql`
+  mutation userAppEnvRemoveAllowedUa($appEnvId: String!, $ua: String!) {
+    item: userAppEnvRemoveAllowedUa(appEnvId: $appEnvId, ua: $ua) {
+      ...AppEnvDetails
+    }
+  }
+  ${AppEnvDetails}
+`
+export const UserAppEnvAddBlockedUa = gql`
+  mutation userAppEnvAddBlockedUa($appEnvId: String!, $ua: String!) {
+    item: userAppEnvAddBlockedUa(appEnvId: $appEnvId, ua: $ua) {
+      ...AppEnvDetails
+    }
+  }
+  ${AppEnvDetails}
+`
+export const UserAppEnvRemoveBlockedUa = gql`
+  mutation userAppEnvRemoveBlockedUa($appEnvId: String!, $ua: String!) {
+    item: userAppEnvRemoveBlockedUa(appEnvId: $appEnvId, ua: $ua) {
+      ...AppEnvDetails
+    }
+  }
+  ${AppEnvDetails}
 `
 export const UserAppEnvMintDisable = gql`
   mutation UserAppEnvMintDisable($appId: String!, $appEnvId: String!, $mintId: String!) {
@@ -1145,21 +1367,35 @@ export const UserAppEnvWalletRemove = gql`
   ${AppEnvDetails}
   ${WalletDetails}
 `
-export const UserAppTransaction = gql`
-  query UserAppTransaction($appId: String!, $appEnvId: String!, $appTransactionId: String!) {
-    item: userAppTransaction(appId: $appId, appEnvId: $appEnvId, appTransactionId: $appTransactionId) {
-      ...AppTransactionDetails
+export const UserDeleteAppEnv = gql`
+  mutation UserDeleteAppEnv($appId: String!, $appEnvId: String!) {
+    item: userDeleteAppEnv(appId: $appId, appEnvId: $appEnvId) {
+      ...AppEnvDetails
     }
   }
-  ${AppTransactionDetails}
+  ${AppEnvDetails}
 `
-export const UserAppTransactions = gql`
-  query UserAppTransactions($appId: String!, $appEnvId: String!, $input: AppTransactionListInput) {
-    items: userAppTransactions(appId: $appId, appEnvId: $appEnvId, input: $input) {
-      ...AppTransactionDetails
+export const UserTransaction = gql`
+  query UserTransaction($appId: String!, $appEnvId: String!, $transactionId: String!) {
+    item: userTransaction(appId: $appId, appEnvId: $appEnvId, transactionId: $transactionId) {
+      ...TransactionDetails
     }
   }
-  ${AppTransactionDetails}
+  ${TransactionDetails}
+`
+export const UserTransactions = gql`
+  query UserTransactions($appId: String!, $appEnvId: String!, $input: UserTransactionListInput) {
+    items: userTransactions(appId: $appId, appEnvId: $appEnvId, input: $input) {
+      ...TransactionDetails
+    }
+    count: userTransactionCounter(appId: $appId, appEnvId: $appEnvId, input: $input) {
+      limit
+      page
+      pageCount
+      total
+    }
+  }
+  ${TransactionDetails}
 `
 export const UserApps = gql`
   query UserApps {
@@ -1207,7 +1443,7 @@ export const UserAppEnv = gql`
   ${WalletDetails}
 `
 export const Login = gql`
-  mutation Login($input: LoginInput!) {
+  mutation Login($input: UserLoginInput!) {
     login(input: $input) {
       ...AuthTokenDetails
     }
@@ -1227,9 +1463,9 @@ export const Me = gql`
   }
   ${UserDetails}
 `
-export const AdminAddClusterMint = gql`
-  mutation AdminAddClusterMint($input: MintAddInput!) {
-    adminAddClusterMint(input: $input) {
+export const AdminMintCreate = gql`
+  mutation AdminMintCreate($input: AdminMintCreateInput!) {
+    adminMintCreate(input: $input) {
       ...ClusterDetails
       mints {
         ...MintDetails
@@ -1240,7 +1476,7 @@ export const AdminAddClusterMint = gql`
   ${MintDetails}
 `
 export const AdminCreateCluster = gql`
-  mutation AdminCreateCluster($input: ClusterCreateInput!) {
+  mutation AdminCreateCluster($input: AdminClusterCreateInput!) {
     created: adminCreateCluster(input: $input) {
       ...ClusterDetails
     }
@@ -1256,7 +1492,7 @@ export const AdminDeleteCluster = gql`
   ${ClusterDetails}
 `
 export const AdminUpdateCluster = gql`
-  mutation AdminUpdateCluster($clusterId: String!, $input: ClusterUpdateInput!) {
+  mutation AdminUpdateCluster($clusterId: String!, $input: AdminClusterUpdateInput!) {
     updated: adminUpdateCluster(clusterId: $clusterId, input: $input) {
       ...ClusterDetails
     }
@@ -1275,14 +1511,6 @@ export const AdminCluster = gql`
   ${ClusterDetails}
   ${MintDetails}
 `
-export const AdminClusterTokens = gql`
-  query AdminClusterTokens($input: ClusterTokenInput!) {
-    items: adminClusterTokens(input: $input) {
-      ...ClusterTokenDetails
-    }
-  }
-  ${ClusterTokenDetails}
-`
 export const AdminClusters = gql`
   query AdminClusters {
     items: adminClusters {
@@ -1295,13 +1523,39 @@ export const AdminClusters = gql`
   ${ClusterDetails}
   ${MintDetails}
 `
-export const ClusterStats = gql`
-  query ClusterStats($clusterId: String!) {
-    items: clusterStats(clusterId: $clusterId) {
-      ...ClusterStatDetails
+export const UserCluster = gql`
+  query UserCluster($clusterId: String!) {
+    item: userCluster(clusterId: $clusterId) {
+      ...ClusterDetails
+      mints {
+        ...MintDetails
+      }
     }
   }
-  ${ClusterStatDetails}
+  ${ClusterDetails}
+  ${MintDetails}
+`
+export const UserClusters = gql`
+  query UserClusters {
+    items: userClusters {
+      ...ClusterDetails
+      mints {
+        ...MintDetails
+      }
+    }
+  }
+  ${ClusterDetails}
+  ${MintDetails}
+`
+export const WebConfig = gql`
+  query WebConfig {
+    config: webConfig {
+      discordEnabled
+      githubEnabled
+      googleEnabled
+      passwordEnabled
+    }
+  }
 `
 export const Uptime = gql`
   query Uptime {
@@ -1309,7 +1563,7 @@ export const Uptime = gql`
   }
 `
 export const AdminCreateUser = gql`
-  mutation AdminCreateUser($input: UserCreateInput!) {
+  mutation AdminCreateUser($input: AdminUserCreateInput!) {
     created: adminCreateUser(input: $input) {
       ...UserDetails
     }
@@ -1325,7 +1579,7 @@ export const AdminDeleteUser = gql`
   ${UserDetails}
 `
 export const AdminUpdateUser = gql`
-  mutation AdminUpdateUser($userId: String!, $input: UserUpdateInput!) {
+  mutation AdminUpdateUser($userId: String!, $input: AdminUserUpdateInput!) {
     updated: adminUpdateUser(userId: $userId, input: $input) {
       ...UserDetails
     }
@@ -1351,6 +1605,14 @@ export const AdminUser = gql`
 export const AdminUsers = gql`
   query AdminUsers {
     items: adminUsers {
+      ...UserDetails
+    }
+  }
+  ${UserDetails}
+`
+export const UserSearchUsers = gql`
+  query UserSearchUsers($input: UserSearchUserInput!) {
+    items: userSearchUsers(input: $input) {
       ...UserDetails
     }
   }
@@ -1488,7 +1750,7 @@ export const UserWallets = gql`
   ${AppMintDetails}
 `
 export type AdminCreateAppMutationVariables = Exact<{
-  input: AppCreateInput
+  input: AdminAppCreateInput
 }>
 
 export type AdminCreateAppMutation = {
@@ -1499,6 +1761,8 @@ export type AdminCreateAppMutation = {
     createdAt: any
     updatedAt: any
     index: number
+    logoUrl?: string | null
+    maxEnvs: number
     name?: string | null
     defaultEnvUrl?: string | null
     settingsUrl?: string | null
@@ -1507,9 +1771,17 @@ export type AdminCreateAppMutation = {
       id: string
       createdAt: any
       updatedAt: any
+      endpoint?: string | null
       key?: string | null
+      ipsAllowed?: Array<string> | null
+      ipsBlocked?: Array<string> | null
       name?: string | null
-      webhookAcceptIncoming?: boolean | null
+      uasAllowed?: Array<string> | null
+      uasBlocked?: Array<string> | null
+      webhookBalanceEnabled?: boolean | null
+      webhookBalanceUrl?: string | null
+      webhookBalanceThreshold?: string | null
+      webhookDebugging?: boolean | null
       webhookEventEnabled?: boolean | null
       webhookEventUrl?: string | null
       webhookSecret?: string | null
@@ -1529,6 +1801,7 @@ export type AdminCreateAppMutation = {
         createdAt: any
         updatedAt: any
         index: number
+        maxEnvs: number
         name?: string | null
       } | null
       cluster?: {
@@ -1536,7 +1809,6 @@ export type AdminCreateAppMutation = {
         id?: string | null
         createdAt?: any | null
         updatedAt?: any | null
-        enableStats?: boolean | null
         endpointPrivate?: string | null
         endpointPublic?: string | null
         explorer?: string | null
@@ -1613,6 +1885,166 @@ export type AdminCreateAppMutation = {
         createdAt: any
         updatedAt: any
         index: number
+        logoUrl?: string | null
+        maxEnvs: number
+        name?: string | null
+        defaultEnvUrl?: string | null
+        settingsUrl?: string | null
+      } | null
+      user?: {
+        __typename?: 'User'
+        id: string
+        createdAt: any
+        updatedAt: any
+        avatarUrl?: string | null
+        email?: string | null
+        name?: string | null
+        username: string
+        role?: UserRole | null
+      } | null
+    }> | null
+  } | null
+}
+
+export type AdminUpdateAppMutationVariables = Exact<{
+  appId: Scalars['String']
+  input: AdminAppUpdateInput
+}>
+
+export type AdminUpdateAppMutation = {
+  __typename?: 'Mutation'
+  updated?: {
+    __typename?: 'App'
+    id: string
+    createdAt: any
+    updatedAt: any
+    index: number
+    logoUrl?: string | null
+    maxEnvs: number
+    name?: string | null
+    defaultEnvUrl?: string | null
+    settingsUrl?: string | null
+    envs?: Array<{
+      __typename?: 'AppEnv'
+      id: string
+      createdAt: any
+      updatedAt: any
+      endpoint?: string | null
+      key?: string | null
+      ipsAllowed?: Array<string> | null
+      ipsBlocked?: Array<string> | null
+      name?: string | null
+      uasAllowed?: Array<string> | null
+      uasBlocked?: Array<string> | null
+      webhookBalanceEnabled?: boolean | null
+      webhookBalanceUrl?: string | null
+      webhookBalanceThreshold?: string | null
+      webhookDebugging?: boolean | null
+      webhookEventEnabled?: boolean | null
+      webhookEventUrl?: string | null
+      webhookSecret?: string | null
+      webhookVerifyEnabled?: boolean | null
+      webhookVerifyUrl?: string | null
+      wallets?: Array<{
+        __typename?: 'Wallet'
+        id: string
+        createdAt?: any | null
+        updatedAt?: any | null
+        publicKey?: string | null
+        type?: WalletType | null
+      }> | null
+      app?: {
+        __typename?: 'App'
+        id: string
+        createdAt: any
+        updatedAt: any
+        index: number
+        maxEnvs: number
+        name?: string | null
+      } | null
+      cluster?: {
+        __typename?: 'Cluster'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        endpointPrivate?: string | null
+        endpointPublic?: string | null
+        explorer?: string | null
+        name?: string | null
+        status?: ClusterStatus | null
+        type?: ClusterType | null
+        mints?: Array<{
+          __typename?: 'Mint'
+          id?: string | null
+          createdAt?: any | null
+          updatedAt?: any | null
+          addMemo?: boolean | null
+          address?: string | null
+          airdropAmount?: number | null
+          airdropMax?: number | null
+          airdropPublicKey?: string | null
+          coinGeckoId?: string | null
+          decimals?: number | null
+          default?: boolean | null
+          enabled?: boolean | null
+          logoUrl?: string | null
+          name?: string | null
+          order?: number | null
+          symbol?: string | null
+          type?: MintType | null
+        }> | null
+      } | null
+      mints?: Array<{
+        __typename?: 'AppMint'
+        id: string
+        createdAt: any
+        updatedAt: any
+        addMemo?: boolean | null
+        order?: number | null
+        mint?: {
+          __typename?: 'Mint'
+          id?: string | null
+          createdAt?: any | null
+          updatedAt?: any | null
+          addMemo?: boolean | null
+          address?: string | null
+          airdropAmount?: number | null
+          airdropMax?: number | null
+          airdropPublicKey?: string | null
+          coinGeckoId?: string | null
+          decimals?: number | null
+          default?: boolean | null
+          enabled?: boolean | null
+          logoUrl?: string | null
+          name?: string | null
+          order?: number | null
+          symbol?: string | null
+          type?: MintType | null
+        } | null
+        wallet?: {
+          __typename?: 'Wallet'
+          id: string
+          createdAt?: any | null
+          updatedAt?: any | null
+          publicKey?: string | null
+          type?: WalletType | null
+        } | null
+      }> | null
+    }> | null
+    users?: Array<{
+      __typename?: 'AppUser'
+      id: string
+      createdAt: any
+      updatedAt: any
+      role: AppUserRole
+      app?: {
+        __typename?: 'App'
+        id: string
+        createdAt: any
+        updatedAt: any
+        index: number
+        logoUrl?: string | null
+        maxEnvs: number
         name?: string | null
         defaultEnvUrl?: string | null
         settingsUrl?: string | null
@@ -1644,9 +2076,119 @@ export type AdminDeleteAppMutation = {
     createdAt: any
     updatedAt: any
     index: number
+    logoUrl?: string | null
+    maxEnvs: number
     name?: string | null
     defaultEnvUrl?: string | null
     settingsUrl?: string | null
+  } | null
+}
+
+export type AdminDeleteAppEnvMutationVariables = Exact<{
+  appId: Scalars['String']
+  appEnvId: Scalars['String']
+}>
+
+export type AdminDeleteAppEnvMutation = {
+  __typename?: 'Mutation'
+  deleted?: {
+    __typename?: 'AppEnv'
+    id: string
+    createdAt: any
+    updatedAt: any
+    endpoint?: string | null
+    key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
+    name?: string | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
+    webhookEventEnabled?: boolean | null
+    webhookEventUrl?: string | null
+    webhookSecret?: string | null
+    webhookVerifyEnabled?: boolean | null
+    webhookVerifyUrl?: string | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
+    cluster?: {
+      __typename?: 'Cluster'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
+      endpointPrivate?: string | null
+      endpointPublic?: string | null
+      explorer?: string | null
+      name?: string | null
+      status?: ClusterStatus | null
+      type?: ClusterType | null
+      mints?: Array<{
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      }> | null
+    } | null
+    mints?: Array<{
+      __typename?: 'AppMint'
+      id: string
+      createdAt: any
+      updatedAt: any
+      addMemo?: boolean | null
+      order?: number | null
+      mint?: {
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      } | null
+      wallet?: {
+        __typename?: 'Wallet'
+        id: string
+        createdAt?: any | null
+        updatedAt?: any | null
+        publicKey?: string | null
+        type?: WalletType | null
+      } | null
+    }> | null
   } | null
 }
 
@@ -1660,6 +2202,8 @@ export type AdminAppsQuery = {
     createdAt: any
     updatedAt: any
     index: number
+    logoUrl?: string | null
+    maxEnvs: number
     name?: string | null
     defaultEnvUrl?: string | null
     settingsUrl?: string | null
@@ -1668,9 +2212,17 @@ export type AdminAppsQuery = {
       id: string
       createdAt: any
       updatedAt: any
+      endpoint?: string | null
       key?: string | null
+      ipsAllowed?: Array<string> | null
+      ipsBlocked?: Array<string> | null
       name?: string | null
-      webhookAcceptIncoming?: boolean | null
+      uasAllowed?: Array<string> | null
+      uasBlocked?: Array<string> | null
+      webhookBalanceEnabled?: boolean | null
+      webhookBalanceUrl?: string | null
+      webhookBalanceThreshold?: string | null
+      webhookDebugging?: boolean | null
       webhookEventEnabled?: boolean | null
       webhookEventUrl?: string | null
       webhookSecret?: string | null
@@ -1682,6 +2234,7 @@ export type AdminAppsQuery = {
         createdAt: any
         updatedAt: any
         index: number
+        maxEnvs: number
         name?: string | null
       } | null
       cluster?: {
@@ -1689,7 +2242,6 @@ export type AdminAppsQuery = {
         id?: string | null
         createdAt?: any | null
         updatedAt?: any | null
-        enableStats?: boolean | null
         endpointPrivate?: string | null
         endpointPublic?: string | null
         explorer?: string | null
@@ -1769,6 +2321,8 @@ export type AdminAppQuery = {
     createdAt: any
     updatedAt: any
     index: number
+    logoUrl?: string | null
+    maxEnvs: number
     name?: string | null
     defaultEnvUrl?: string | null
     settingsUrl?: string | null
@@ -1777,9 +2331,17 @@ export type AdminAppQuery = {
       id: string
       createdAt: any
       updatedAt: any
+      endpoint?: string | null
       key?: string | null
+      ipsAllowed?: Array<string> | null
+      ipsBlocked?: Array<string> | null
       name?: string | null
-      webhookAcceptIncoming?: boolean | null
+      uasAllowed?: Array<string> | null
+      uasBlocked?: Array<string> | null
+      webhookBalanceEnabled?: boolean | null
+      webhookBalanceUrl?: string | null
+      webhookBalanceThreshold?: string | null
+      webhookDebugging?: boolean | null
       webhookEventEnabled?: boolean | null
       webhookEventUrl?: string | null
       webhookSecret?: string | null
@@ -1799,6 +2361,7 @@ export type AdminAppQuery = {
         createdAt: any
         updatedAt: any
         index: number
+        maxEnvs: number
         name?: string | null
       } | null
       cluster?: {
@@ -1806,7 +2369,6 @@ export type AdminAppQuery = {
         id?: string | null
         createdAt?: any | null
         updatedAt?: any | null
-        enableStats?: boolean | null
         endpointPrivate?: string | null
         endpointPublic?: string | null
         explorer?: string | null
@@ -1883,6 +2445,8 @@ export type AdminAppQuery = {
         createdAt: any
         updatedAt: any
         index: number
+        logoUrl?: string | null
+        maxEnvs: number
         name?: string | null
         defaultEnvUrl?: string | null
         settingsUrl?: string | null
@@ -1908,6 +2472,8 @@ export type AppDetailsFragment = {
   createdAt: any
   updatedAt: any
   index: number
+  logoUrl?: string | null
+  maxEnvs: number
   name?: string | null
   defaultEnvUrl?: string | null
   settingsUrl?: string | null
@@ -1918,21 +2484,36 @@ export type AppEnvDetailsFragment = {
   id: string
   createdAt: any
   updatedAt: any
+  endpoint?: string | null
   key?: string | null
+  ipsAllowed?: Array<string> | null
+  ipsBlocked?: Array<string> | null
   name?: string | null
-  webhookAcceptIncoming?: boolean | null
+  uasAllowed?: Array<string> | null
+  uasBlocked?: Array<string> | null
+  webhookBalanceEnabled?: boolean | null
+  webhookBalanceUrl?: string | null
+  webhookBalanceThreshold?: string | null
+  webhookDebugging?: boolean | null
   webhookEventEnabled?: boolean | null
   webhookEventUrl?: string | null
   webhookSecret?: string | null
   webhookVerifyEnabled?: boolean | null
   webhookVerifyUrl?: string | null
-  app?: { __typename?: 'App'; id: string; createdAt: any; updatedAt: any; index: number; name?: string | null } | null
+  app?: {
+    __typename?: 'App'
+    id: string
+    createdAt: any
+    updatedAt: any
+    index: number
+    maxEnvs: number
+    name?: string | null
+  } | null
   cluster?: {
     __typename?: 'Cluster'
     id?: string | null
     createdAt?: any | null
     updatedAt?: any | null
-    enableStats?: boolean | null
     endpointPrivate?: string | null
     endpointPublic?: string | null
     explorer?: string | null
@@ -1998,6 +2579,27 @@ export type AppEnvDetailsFragment = {
   }> | null
 }
 
+export type AppEnvStatsDetailsFragment = {
+  __typename?: 'AppEnvStats'
+  transactionCount?: {
+    __typename?: 'AppEnvTransactionCount'
+    Committed?: number | null
+    Confirmed?: number | null
+    Failed?: number | null
+    Finalized?: number | null
+    Processing?: number | null
+  } | null
+}
+
+export type AppEnvTransactionCountDetailsFragment = {
+  __typename?: 'AppEnvTransactionCount'
+  Committed?: number | null
+  Confirmed?: number | null
+  Failed?: number | null
+  Finalized?: number | null
+  Processing?: number | null
+}
+
 export type AppMintDetailsFragment = {
   __typename?: 'AppMint'
   id: string
@@ -2035,15 +2637,17 @@ export type AppMintDetailsFragment = {
   } | null
 }
 
-export type AppTransactionDetailsFragment = {
-  __typename?: 'AppTransaction'
+export type TransactionDetailsFragment = {
+  __typename?: 'Transaction'
   id?: string | null
   createdAt?: any | null
   updatedAt?: any | null
   amount?: string | null
+  decimals?: number | null
   destination?: string | null
   explorerUrl?: string | null
   feePayer?: string | null
+  ip?: string | null
   mint?: string | null
   processingDuration?: number | null
   referenceId?: string | null
@@ -2056,8 +2660,10 @@ export type AppTransactionDetailsFragment = {
   solanaStart?: any | null
   solanaTransaction?: any | null
   source?: string | null
-  status: AppTransactionStatus
+  status: TransactionStatus
   totalDuration?: number | null
+  tx?: string | null
+  ua?: string | null
   webhookEventDuration?: number | null
   webhookEventEnd?: any | null
   webhookEventStart?: any | null
@@ -2065,73 +2671,73 @@ export type AppTransactionDetailsFragment = {
   webhookVerifyEnd?: any | null
   webhookVerifyStart?: any | null
   errors?: Array<{
-    __typename?: 'AppTransactionError'
+    __typename?: 'TransactionError'
     id?: string | null
     logs?: Array<string> | null
     message?: string | null
-    type: AppTransactionErrorType
+    type: TransactionErrorType
     instruction?: number | null
   }> | null
   webhookEventIncoming?: {
-    __typename?: 'AppWebhook'
+    __typename?: 'Webhook'
     id: string
     createdAt: any
     updatedAt: any
-    direction: AppWebhookDirection
+    direction: WebhookDirection
     headers?: any | null
     payload?: any | null
     responseError?: string | null
     responsePayload?: any | null
     responseStatus?: number | null
-    type: AppWebhookType
+    type: WebhookType
   } | null
   webhookEventOutgoing?: {
-    __typename?: 'AppWebhook'
+    __typename?: 'Webhook'
     id: string
     createdAt: any
     updatedAt: any
-    direction: AppWebhookDirection
+    direction: WebhookDirection
     headers?: any | null
     payload?: any | null
     responseError?: string | null
     responsePayload?: any | null
     responseStatus?: number | null
-    type: AppWebhookType
+    type: WebhookType
   } | null
   webhookVerifyIncoming?: {
-    __typename?: 'AppWebhook'
+    __typename?: 'Webhook'
     id: string
     createdAt: any
     updatedAt: any
-    direction: AppWebhookDirection
+    direction: WebhookDirection
     headers?: any | null
     payload?: any | null
     responseError?: string | null
     responsePayload?: any | null
     responseStatus?: number | null
-    type: AppWebhookType
+    type: WebhookType
   } | null
   webhookVerifyOutgoing?: {
-    __typename?: 'AppWebhook'
+    __typename?: 'Webhook'
     id: string
     createdAt: any
     updatedAt: any
-    direction: AppWebhookDirection
+    direction: WebhookDirection
     headers?: any | null
     payload?: any | null
     responseError?: string | null
     responsePayload?: any | null
     responseStatus?: number | null
-    type: AppWebhookType
+    type: WebhookType
   } | null
 }
 
-export type AppTransactionErrorDetailsFragment = {
-  __typename?: 'AppTransactionError'
+export type TransactionErrorDetailsFragment = {
+  __typename?: 'TransactionError'
   id?: string | null
   logs?: Array<string> | null
   message?: string | null
-  type: AppTransactionErrorType
+  type: TransactionErrorType
   instruction?: number | null
 }
 
@@ -2147,6 +2753,8 @@ export type AppUserDetailsFragment = {
     createdAt: any
     updatedAt: any
     index: number
+    logoUrl?: string | null
+    maxEnvs: number
     name?: string | null
     defaultEnvUrl?: string | null
     settingsUrl?: string | null
@@ -2164,23 +2772,42 @@ export type AppUserDetailsFragment = {
   } | null
 }
 
-export type AppWebhookDetailsFragment = {
-  __typename?: 'AppWebhook'
+export type WebhookDetailsFragment = {
+  __typename?: 'Webhook'
   id: string
   createdAt: any
   updatedAt: any
-  direction: AppWebhookDirection
+  direction: WebhookDirection
   headers?: any | null
   payload?: any | null
   responseError?: string | null
   responsePayload?: any | null
   responseStatus?: number | null
-  type: AppWebhookType
+  type: WebhookType
+}
+
+export type UserAppEnvStatsQueryVariables = Exact<{
+  appEnvId: Scalars['String']
+}>
+
+export type UserAppEnvStatsQuery = {
+  __typename?: 'Query'
+  stats?: {
+    __typename?: 'AppEnvStats'
+    transactionCount?: {
+      __typename?: 'AppEnvTransactionCount'
+      Committed?: number | null
+      Confirmed?: number | null
+      Failed?: number | null
+      Finalized?: number | null
+      Processing?: number | null
+    } | null
+  } | null
 }
 
 export type UserUpdateAppMutationVariables = Exact<{
   appId: Scalars['String']
-  input: AppUpdateInput
+  input: UserAppUpdateInput
 }>
 
 export type UserUpdateAppMutation = {
@@ -2191,6 +2818,8 @@ export type UserUpdateAppMutation = {
     createdAt: any
     updatedAt: any
     index: number
+    logoUrl?: string | null
+    maxEnvs: number
     name?: string | null
     defaultEnvUrl?: string | null
     settingsUrl?: string | null
@@ -2199,9 +2828,17 @@ export type UserUpdateAppMutation = {
       id: string
       createdAt: any
       updatedAt: any
+      endpoint?: string | null
       key?: string | null
+      ipsAllowed?: Array<string> | null
+      ipsBlocked?: Array<string> | null
       name?: string | null
-      webhookAcceptIncoming?: boolean | null
+      uasAllowed?: Array<string> | null
+      uasBlocked?: Array<string> | null
+      webhookBalanceEnabled?: boolean | null
+      webhookBalanceUrl?: string | null
+      webhookBalanceThreshold?: string | null
+      webhookDebugging?: boolean | null
       webhookEventEnabled?: boolean | null
       webhookEventUrl?: string | null
       webhookSecret?: string | null
@@ -2221,6 +2858,7 @@ export type UserUpdateAppMutation = {
         createdAt: any
         updatedAt: any
         index: number
+        maxEnvs: number
         name?: string | null
       } | null
       cluster?: {
@@ -2228,7 +2866,6 @@ export type UserUpdateAppMutation = {
         id?: string | null
         createdAt?: any | null
         updatedAt?: any | null
-        enableStats?: boolean | null
         endpointPrivate?: string | null
         endpointPublic?: string | null
         explorer?: string | null
@@ -2305,6 +2942,8 @@ export type UserUpdateAppMutation = {
         createdAt: any
         updatedAt: any
         index: number
+        logoUrl?: string | null
+        maxEnvs: number
         name?: string | null
         defaultEnvUrl?: string | null
         settingsUrl?: string | null
@@ -2324,22 +2963,30 @@ export type UserUpdateAppMutation = {
   } | null
 }
 
-export type UserUpdateAppEnvMutationVariables = Exact<{
+export type UserCreateAppEnvMutationVariables = Exact<{
   appId: Scalars['String']
-  appEnvId: Scalars['String']
-  input: AppEnvUpdateInput
+  clusterId: Scalars['String']
+  input: UserAppEnvCreateInput
 }>
 
-export type UserUpdateAppEnvMutation = {
+export type UserCreateAppEnvMutation = {
   __typename?: 'Mutation'
-  updated?: {
+  created?: {
     __typename?: 'AppEnv'
     id: string
     createdAt: any
     updatedAt: any
+    endpoint?: string | null
     key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
     name?: string | null
-    webhookAcceptIncoming?: boolean | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
     webhookEventEnabled?: boolean | null
     webhookEventUrl?: string | null
     webhookSecret?: string | null
@@ -2353,13 +3000,137 @@ export type UserUpdateAppEnvMutation = {
       publicKey?: string | null
       type?: WalletType | null
     }> | null
-    app?: { __typename?: 'App'; id: string; createdAt: any; updatedAt: any; index: number; name?: string | null } | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
     cluster?: {
       __typename?: 'Cluster'
       id?: string | null
       createdAt?: any | null
       updatedAt?: any | null
-      enableStats?: boolean | null
+      endpointPrivate?: string | null
+      endpointPublic?: string | null
+      explorer?: string | null
+      name?: string | null
+      status?: ClusterStatus | null
+      type?: ClusterType | null
+      mints?: Array<{
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      }> | null
+    } | null
+    mints?: Array<{
+      __typename?: 'AppMint'
+      id: string
+      createdAt: any
+      updatedAt: any
+      addMemo?: boolean | null
+      order?: number | null
+      mint?: {
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      } | null
+      wallet?: {
+        __typename?: 'Wallet'
+        id: string
+        createdAt?: any | null
+        updatedAt?: any | null
+        publicKey?: string | null
+        type?: WalletType | null
+      } | null
+    }> | null
+  } | null
+}
+
+export type UserUpdateAppEnvMutationVariables = Exact<{
+  appId: Scalars['String']
+  appEnvId: Scalars['String']
+  input: UserAppEnvUpdateInput
+}>
+
+export type UserUpdateAppEnvMutation = {
+  __typename?: 'Mutation'
+  updated?: {
+    __typename?: 'AppEnv'
+    id: string
+    createdAt: any
+    updatedAt: any
+    endpoint?: string | null
+    key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
+    name?: string | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
+    webhookEventEnabled?: boolean | null
+    webhookEventUrl?: string | null
+    webhookSecret?: string | null
+    webhookVerifyEnabled?: boolean | null
+    webhookVerifyUrl?: string | null
+    wallets?: Array<{
+      __typename?: 'Wallet'
+      id: string
+      createdAt?: any | null
+      updatedAt?: any | null
+      publicKey?: string | null
+      type?: WalletType | null
+    }> | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
+    cluster?: {
+      __typename?: 'Cluster'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
       endpointPrivate?: string | null
       endpointPublic?: string | null
       explorer?: string | null
@@ -2429,7 +3200,7 @@ export type UserUpdateAppEnvMutation = {
 export type UserUpdateAppMintMutationVariables = Exact<{
   appId: Scalars['String']
   appMintId: Scalars['String']
-  input: AppMintUpdateInput
+  input: UserAppMintUpdateInput
 }>
 
 export type UserUpdateAppMintMutation = {
@@ -2474,7 +3245,7 @@ export type UserUpdateAppMintMutation = {
 
 export type UserAppUserAddMutationVariables = Exact<{
   appId: Scalars['String']
-  input: AppUserAddInput
+  input: UserAppUserAddInput
 }>
 
 export type UserAppUserAddMutation = {
@@ -2485,6 +3256,8 @@ export type UserAppUserAddMutation = {
     createdAt: any
     updatedAt: any
     index: number
+    logoUrl?: string | null
+    maxEnvs: number
     name?: string | null
     defaultEnvUrl?: string | null
     settingsUrl?: string | null
@@ -2500,6 +3273,8 @@ export type UserAppUserAddMutation = {
         createdAt: any
         updatedAt: any
         index: number
+        logoUrl?: string | null
+        maxEnvs: number
         name?: string | null
         defaultEnvUrl?: string | null
         settingsUrl?: string | null
@@ -2521,7 +3296,7 @@ export type UserAppUserAddMutation = {
 
 export type UserAppUserRemoveMutationVariables = Exact<{
   appId: Scalars['String']
-  input: AppUserRemoveInput
+  input: UserAppUserRemoveInput
 }>
 
 export type UserAppUserRemoveMutation = {
@@ -2532,6 +3307,8 @@ export type UserAppUserRemoveMutation = {
     createdAt: any
     updatedAt: any
     index: number
+    logoUrl?: string | null
+    maxEnvs: number
     name?: string | null
     defaultEnvUrl?: string | null
     settingsUrl?: string | null
@@ -2547,6 +3324,8 @@ export type UserAppUserRemoveMutation = {
         createdAt: any
         updatedAt: any
         index: number
+        logoUrl?: string | null
+        maxEnvs: number
         name?: string | null
         defaultEnvUrl?: string | null
         settingsUrl?: string | null
@@ -2568,7 +3347,7 @@ export type UserAppUserRemoveMutation = {
 
 export type UserAppUserUpdateRoleMutationVariables = Exact<{
   appId: Scalars['String']
-  input: AppUserUpdateRoleInput
+  input: UserAppUserUpdateRoleInput
 }>
 
 export type UserAppUserUpdateRoleMutation = {
@@ -2579,6 +3358,8 @@ export type UserAppUserUpdateRoleMutation = {
     createdAt: any
     updatedAt: any
     index: number
+    logoUrl?: string | null
+    maxEnvs: number
     name?: string | null
     defaultEnvUrl?: string | null
     settingsUrl?: string | null
@@ -2594,6 +3375,8 @@ export type UserAppUserUpdateRoleMutation = {
         createdAt: any
         updatedAt: any
         index: number
+        logoUrl?: string | null
+        maxEnvs: number
         name?: string | null
         defaultEnvUrl?: string | null
         settingsUrl?: string | null
@@ -2613,6 +3396,870 @@ export type UserAppUserUpdateRoleMutation = {
   } | null
 }
 
+export type UserAppEnvAddAllowedIpMutationVariables = Exact<{
+  appEnvId: Scalars['String']
+  ip: Scalars['String']
+}>
+
+export type UserAppEnvAddAllowedIpMutation = {
+  __typename?: 'Mutation'
+  item?: {
+    __typename?: 'AppEnv'
+    id: string
+    createdAt: any
+    updatedAt: any
+    endpoint?: string | null
+    key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
+    name?: string | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
+    webhookEventEnabled?: boolean | null
+    webhookEventUrl?: string | null
+    webhookSecret?: string | null
+    webhookVerifyEnabled?: boolean | null
+    webhookVerifyUrl?: string | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
+    cluster?: {
+      __typename?: 'Cluster'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
+      endpointPrivate?: string | null
+      endpointPublic?: string | null
+      explorer?: string | null
+      name?: string | null
+      status?: ClusterStatus | null
+      type?: ClusterType | null
+      mints?: Array<{
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      }> | null
+    } | null
+    mints?: Array<{
+      __typename?: 'AppMint'
+      id: string
+      createdAt: any
+      updatedAt: any
+      addMemo?: boolean | null
+      order?: number | null
+      mint?: {
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      } | null
+      wallet?: {
+        __typename?: 'Wallet'
+        id: string
+        createdAt?: any | null
+        updatedAt?: any | null
+        publicKey?: string | null
+        type?: WalletType | null
+      } | null
+    }> | null
+  } | null
+}
+
+export type UserAppEnvRemoveAllowedIpMutationVariables = Exact<{
+  appEnvId: Scalars['String']
+  ip: Scalars['String']
+}>
+
+export type UserAppEnvRemoveAllowedIpMutation = {
+  __typename?: 'Mutation'
+  item?: {
+    __typename?: 'AppEnv'
+    id: string
+    createdAt: any
+    updatedAt: any
+    endpoint?: string | null
+    key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
+    name?: string | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
+    webhookEventEnabled?: boolean | null
+    webhookEventUrl?: string | null
+    webhookSecret?: string | null
+    webhookVerifyEnabled?: boolean | null
+    webhookVerifyUrl?: string | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
+    cluster?: {
+      __typename?: 'Cluster'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
+      endpointPrivate?: string | null
+      endpointPublic?: string | null
+      explorer?: string | null
+      name?: string | null
+      status?: ClusterStatus | null
+      type?: ClusterType | null
+      mints?: Array<{
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      }> | null
+    } | null
+    mints?: Array<{
+      __typename?: 'AppMint'
+      id: string
+      createdAt: any
+      updatedAt: any
+      addMemo?: boolean | null
+      order?: number | null
+      mint?: {
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      } | null
+      wallet?: {
+        __typename?: 'Wallet'
+        id: string
+        createdAt?: any | null
+        updatedAt?: any | null
+        publicKey?: string | null
+        type?: WalletType | null
+      } | null
+    }> | null
+  } | null
+}
+
+export type UserAppEnvAddBlockedIpMutationVariables = Exact<{
+  appEnvId: Scalars['String']
+  ip: Scalars['String']
+}>
+
+export type UserAppEnvAddBlockedIpMutation = {
+  __typename?: 'Mutation'
+  item?: {
+    __typename?: 'AppEnv'
+    id: string
+    createdAt: any
+    updatedAt: any
+    endpoint?: string | null
+    key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
+    name?: string | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
+    webhookEventEnabled?: boolean | null
+    webhookEventUrl?: string | null
+    webhookSecret?: string | null
+    webhookVerifyEnabled?: boolean | null
+    webhookVerifyUrl?: string | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
+    cluster?: {
+      __typename?: 'Cluster'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
+      endpointPrivate?: string | null
+      endpointPublic?: string | null
+      explorer?: string | null
+      name?: string | null
+      status?: ClusterStatus | null
+      type?: ClusterType | null
+      mints?: Array<{
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      }> | null
+    } | null
+    mints?: Array<{
+      __typename?: 'AppMint'
+      id: string
+      createdAt: any
+      updatedAt: any
+      addMemo?: boolean | null
+      order?: number | null
+      mint?: {
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      } | null
+      wallet?: {
+        __typename?: 'Wallet'
+        id: string
+        createdAt?: any | null
+        updatedAt?: any | null
+        publicKey?: string | null
+        type?: WalletType | null
+      } | null
+    }> | null
+  } | null
+}
+
+export type UserAppEnvRemoveBlockedIpMutationVariables = Exact<{
+  appEnvId: Scalars['String']
+  ip: Scalars['String']
+}>
+
+export type UserAppEnvRemoveBlockedIpMutation = {
+  __typename?: 'Mutation'
+  item?: {
+    __typename?: 'AppEnv'
+    id: string
+    createdAt: any
+    updatedAt: any
+    endpoint?: string | null
+    key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
+    name?: string | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
+    webhookEventEnabled?: boolean | null
+    webhookEventUrl?: string | null
+    webhookSecret?: string | null
+    webhookVerifyEnabled?: boolean | null
+    webhookVerifyUrl?: string | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
+    cluster?: {
+      __typename?: 'Cluster'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
+      endpointPrivate?: string | null
+      endpointPublic?: string | null
+      explorer?: string | null
+      name?: string | null
+      status?: ClusterStatus | null
+      type?: ClusterType | null
+      mints?: Array<{
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      }> | null
+    } | null
+    mints?: Array<{
+      __typename?: 'AppMint'
+      id: string
+      createdAt: any
+      updatedAt: any
+      addMemo?: boolean | null
+      order?: number | null
+      mint?: {
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      } | null
+      wallet?: {
+        __typename?: 'Wallet'
+        id: string
+        createdAt?: any | null
+        updatedAt?: any | null
+        publicKey?: string | null
+        type?: WalletType | null
+      } | null
+    }> | null
+  } | null
+}
+
+export type UserAppEnvAddAllowedUaMutationVariables = Exact<{
+  appEnvId: Scalars['String']
+  ua: Scalars['String']
+}>
+
+export type UserAppEnvAddAllowedUaMutation = {
+  __typename?: 'Mutation'
+  item?: {
+    __typename?: 'AppEnv'
+    id: string
+    createdAt: any
+    updatedAt: any
+    endpoint?: string | null
+    key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
+    name?: string | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
+    webhookEventEnabled?: boolean | null
+    webhookEventUrl?: string | null
+    webhookSecret?: string | null
+    webhookVerifyEnabled?: boolean | null
+    webhookVerifyUrl?: string | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
+    cluster?: {
+      __typename?: 'Cluster'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
+      endpointPrivate?: string | null
+      endpointPublic?: string | null
+      explorer?: string | null
+      name?: string | null
+      status?: ClusterStatus | null
+      type?: ClusterType | null
+      mints?: Array<{
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      }> | null
+    } | null
+    mints?: Array<{
+      __typename?: 'AppMint'
+      id: string
+      createdAt: any
+      updatedAt: any
+      addMemo?: boolean | null
+      order?: number | null
+      mint?: {
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      } | null
+      wallet?: {
+        __typename?: 'Wallet'
+        id: string
+        createdAt?: any | null
+        updatedAt?: any | null
+        publicKey?: string | null
+        type?: WalletType | null
+      } | null
+    }> | null
+  } | null
+}
+
+export type UserAppEnvRemoveAllowedUaMutationVariables = Exact<{
+  appEnvId: Scalars['String']
+  ua: Scalars['String']
+}>
+
+export type UserAppEnvRemoveAllowedUaMutation = {
+  __typename?: 'Mutation'
+  item?: {
+    __typename?: 'AppEnv'
+    id: string
+    createdAt: any
+    updatedAt: any
+    endpoint?: string | null
+    key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
+    name?: string | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
+    webhookEventEnabled?: boolean | null
+    webhookEventUrl?: string | null
+    webhookSecret?: string | null
+    webhookVerifyEnabled?: boolean | null
+    webhookVerifyUrl?: string | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
+    cluster?: {
+      __typename?: 'Cluster'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
+      endpointPrivate?: string | null
+      endpointPublic?: string | null
+      explorer?: string | null
+      name?: string | null
+      status?: ClusterStatus | null
+      type?: ClusterType | null
+      mints?: Array<{
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      }> | null
+    } | null
+    mints?: Array<{
+      __typename?: 'AppMint'
+      id: string
+      createdAt: any
+      updatedAt: any
+      addMemo?: boolean | null
+      order?: number | null
+      mint?: {
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      } | null
+      wallet?: {
+        __typename?: 'Wallet'
+        id: string
+        createdAt?: any | null
+        updatedAt?: any | null
+        publicKey?: string | null
+        type?: WalletType | null
+      } | null
+    }> | null
+  } | null
+}
+
+export type UserAppEnvAddBlockedUaMutationVariables = Exact<{
+  appEnvId: Scalars['String']
+  ua: Scalars['String']
+}>
+
+export type UserAppEnvAddBlockedUaMutation = {
+  __typename?: 'Mutation'
+  item?: {
+    __typename?: 'AppEnv'
+    id: string
+    createdAt: any
+    updatedAt: any
+    endpoint?: string | null
+    key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
+    name?: string | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
+    webhookEventEnabled?: boolean | null
+    webhookEventUrl?: string | null
+    webhookSecret?: string | null
+    webhookVerifyEnabled?: boolean | null
+    webhookVerifyUrl?: string | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
+    cluster?: {
+      __typename?: 'Cluster'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
+      endpointPrivate?: string | null
+      endpointPublic?: string | null
+      explorer?: string | null
+      name?: string | null
+      status?: ClusterStatus | null
+      type?: ClusterType | null
+      mints?: Array<{
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      }> | null
+    } | null
+    mints?: Array<{
+      __typename?: 'AppMint'
+      id: string
+      createdAt: any
+      updatedAt: any
+      addMemo?: boolean | null
+      order?: number | null
+      mint?: {
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      } | null
+      wallet?: {
+        __typename?: 'Wallet'
+        id: string
+        createdAt?: any | null
+        updatedAt?: any | null
+        publicKey?: string | null
+        type?: WalletType | null
+      } | null
+    }> | null
+  } | null
+}
+
+export type UserAppEnvRemoveBlockedUaMutationVariables = Exact<{
+  appEnvId: Scalars['String']
+  ua: Scalars['String']
+}>
+
+export type UserAppEnvRemoveBlockedUaMutation = {
+  __typename?: 'Mutation'
+  item?: {
+    __typename?: 'AppEnv'
+    id: string
+    createdAt: any
+    updatedAt: any
+    endpoint?: string | null
+    key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
+    name?: string | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
+    webhookEventEnabled?: boolean | null
+    webhookEventUrl?: string | null
+    webhookSecret?: string | null
+    webhookVerifyEnabled?: boolean | null
+    webhookVerifyUrl?: string | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
+    cluster?: {
+      __typename?: 'Cluster'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
+      endpointPrivate?: string | null
+      endpointPublic?: string | null
+      explorer?: string | null
+      name?: string | null
+      status?: ClusterStatus | null
+      type?: ClusterType | null
+      mints?: Array<{
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      }> | null
+    } | null
+    mints?: Array<{
+      __typename?: 'AppMint'
+      id: string
+      createdAt: any
+      updatedAt: any
+      addMemo?: boolean | null
+      order?: number | null
+      mint?: {
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      } | null
+      wallet?: {
+        __typename?: 'Wallet'
+        id: string
+        createdAt?: any | null
+        updatedAt?: any | null
+        publicKey?: string | null
+        type?: WalletType | null
+      } | null
+    }> | null
+  } | null
+}
+
 export type UserAppEnvMintDisableMutationVariables = Exact<{
   appId: Scalars['String']
   appEnvId: Scalars['String']
@@ -2626,21 +4273,36 @@ export type UserAppEnvMintDisableMutation = {
     id: string
     createdAt: any
     updatedAt: any
+    endpoint?: string | null
     key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
     name?: string | null
-    webhookAcceptIncoming?: boolean | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
     webhookEventEnabled?: boolean | null
     webhookEventUrl?: string | null
     webhookSecret?: string | null
     webhookVerifyEnabled?: boolean | null
     webhookVerifyUrl?: string | null
-    app?: { __typename?: 'App'; id: string; createdAt: any; updatedAt: any; index: number; name?: string | null } | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
     cluster?: {
       __typename?: 'Cluster'
       id?: string | null
       createdAt?: any | null
       updatedAt?: any | null
-      enableStats?: boolean | null
       endpointPrivate?: string | null
       endpointPublic?: string | null
       explorer?: string | null
@@ -2720,21 +4382,36 @@ export type UserAppEnvMintEnableMutation = {
     id: string
     createdAt: any
     updatedAt: any
+    endpoint?: string | null
     key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
     name?: string | null
-    webhookAcceptIncoming?: boolean | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
     webhookEventEnabled?: boolean | null
     webhookEventUrl?: string | null
     webhookSecret?: string | null
     webhookVerifyEnabled?: boolean | null
     webhookVerifyUrl?: string | null
-    app?: { __typename?: 'App'; id: string; createdAt: any; updatedAt: any; index: number; name?: string | null } | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
     cluster?: {
       __typename?: 'Cluster'
       id?: string | null
       createdAt?: any | null
       updatedAt?: any | null
-      enableStats?: boolean | null
       endpointPrivate?: string | null
       endpointPublic?: string | null
       explorer?: string | null
@@ -2815,21 +4492,36 @@ export type UserAppEnvMintSetWalletMutation = {
     id: string
     createdAt: any
     updatedAt: any
+    endpoint?: string | null
     key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
     name?: string | null
-    webhookAcceptIncoming?: boolean | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
     webhookEventEnabled?: boolean | null
     webhookEventUrl?: string | null
     webhookSecret?: string | null
     webhookVerifyEnabled?: boolean | null
     webhookVerifyUrl?: string | null
-    app?: { __typename?: 'App'; id: string; createdAt: any; updatedAt: any; index: number; name?: string | null } | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
     cluster?: {
       __typename?: 'Cluster'
       id?: string | null
       createdAt?: any | null
       updatedAt?: any | null
-      enableStats?: boolean | null
       endpointPrivate?: string | null
       endpointPublic?: string | null
       explorer?: string | null
@@ -2909,9 +4601,17 @@ export type UserAppEnvWalletAddMutation = {
     id: string
     createdAt: any
     updatedAt: any
+    endpoint?: string | null
     key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
     name?: string | null
-    webhookAcceptIncoming?: boolean | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
     webhookEventEnabled?: boolean | null
     webhookEventUrl?: string | null
     webhookSecret?: string | null
@@ -2925,13 +4625,20 @@ export type UserAppEnvWalletAddMutation = {
       publicKey?: string | null
       type?: WalletType | null
     }> | null
-    app?: { __typename?: 'App'; id: string; createdAt: any; updatedAt: any; index: number; name?: string | null } | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
     cluster?: {
       __typename?: 'Cluster'
       id?: string | null
       createdAt?: any | null
       updatedAt?: any | null
-      enableStats?: boolean | null
       endpointPrivate?: string | null
       endpointPublic?: string | null
       explorer?: string | null
@@ -3011,9 +4718,17 @@ export type UserAppEnvWalletRemoveMutation = {
     id: string
     createdAt: any
     updatedAt: any
+    endpoint?: string | null
     key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
     name?: string | null
-    webhookAcceptIncoming?: boolean | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
     webhookEventEnabled?: boolean | null
     webhookEventUrl?: string | null
     webhookSecret?: string | null
@@ -3027,13 +4742,20 @@ export type UserAppEnvWalletRemoveMutation = {
       publicKey?: string | null
       type?: WalletType | null
     }> | null
-    app?: { __typename?: 'App'; id: string; createdAt: any; updatedAt: any; index: number; name?: string | null } | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
     cluster?: {
       __typename?: 'Cluster'
       id?: string | null
       createdAt?: any | null
       updatedAt?: any | null
-      enableStats?: boolean | null
       endpointPrivate?: string | null
       endpointPublic?: string | null
       explorer?: string | null
@@ -3100,23 +4822,133 @@ export type UserAppEnvWalletRemoveMutation = {
   } | null
 }
 
-export type UserAppTransactionQueryVariables = Exact<{
+export type UserDeleteAppEnvMutationVariables = Exact<{
   appId: Scalars['String']
   appEnvId: Scalars['String']
-  appTransactionId: Scalars['String']
 }>
 
-export type UserAppTransactionQuery = {
+export type UserDeleteAppEnvMutation = {
+  __typename?: 'Mutation'
+  item?: {
+    __typename?: 'AppEnv'
+    id: string
+    createdAt: any
+    updatedAt: any
+    endpoint?: string | null
+    key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
+    name?: string | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
+    webhookEventEnabled?: boolean | null
+    webhookEventUrl?: string | null
+    webhookSecret?: string | null
+    webhookVerifyEnabled?: boolean | null
+    webhookVerifyUrl?: string | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
+    cluster?: {
+      __typename?: 'Cluster'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
+      endpointPrivate?: string | null
+      endpointPublic?: string | null
+      explorer?: string | null
+      name?: string | null
+      status?: ClusterStatus | null
+      type?: ClusterType | null
+      mints?: Array<{
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      }> | null
+    } | null
+    mints?: Array<{
+      __typename?: 'AppMint'
+      id: string
+      createdAt: any
+      updatedAt: any
+      addMemo?: boolean | null
+      order?: number | null
+      mint?: {
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      } | null
+      wallet?: {
+        __typename?: 'Wallet'
+        id: string
+        createdAt?: any | null
+        updatedAt?: any | null
+        publicKey?: string | null
+        type?: WalletType | null
+      } | null
+    }> | null
+  } | null
+}
+
+export type UserTransactionQueryVariables = Exact<{
+  appId: Scalars['String']
+  appEnvId: Scalars['String']
+  transactionId: Scalars['String']
+}>
+
+export type UserTransactionQuery = {
   __typename?: 'Query'
   item?: {
-    __typename?: 'AppTransaction'
+    __typename?: 'Transaction'
     id?: string | null
     createdAt?: any | null
     updatedAt?: any | null
     amount?: string | null
+    decimals?: number | null
     destination?: string | null
     explorerUrl?: string | null
     feePayer?: string | null
+    ip?: string | null
     mint?: string | null
     processingDuration?: number | null
     referenceId?: string | null
@@ -3129,8 +4961,10 @@ export type UserAppTransactionQuery = {
     solanaStart?: any | null
     solanaTransaction?: any | null
     source?: string | null
-    status: AppTransactionStatus
+    status: TransactionStatus
     totalDuration?: number | null
+    tx?: string | null
+    ua?: string | null
     webhookEventDuration?: number | null
     webhookEventEnd?: any | null
     webhookEventStart?: any | null
@@ -3138,85 +4972,87 @@ export type UserAppTransactionQuery = {
     webhookVerifyEnd?: any | null
     webhookVerifyStart?: any | null
     errors?: Array<{
-      __typename?: 'AppTransactionError'
+      __typename?: 'TransactionError'
       id?: string | null
       logs?: Array<string> | null
       message?: string | null
-      type: AppTransactionErrorType
+      type: TransactionErrorType
       instruction?: number | null
     }> | null
     webhookEventIncoming?: {
-      __typename?: 'AppWebhook'
+      __typename?: 'Webhook'
       id: string
       createdAt: any
       updatedAt: any
-      direction: AppWebhookDirection
+      direction: WebhookDirection
       headers?: any | null
       payload?: any | null
       responseError?: string | null
       responsePayload?: any | null
       responseStatus?: number | null
-      type: AppWebhookType
+      type: WebhookType
     } | null
     webhookEventOutgoing?: {
-      __typename?: 'AppWebhook'
+      __typename?: 'Webhook'
       id: string
       createdAt: any
       updatedAt: any
-      direction: AppWebhookDirection
+      direction: WebhookDirection
       headers?: any | null
       payload?: any | null
       responseError?: string | null
       responsePayload?: any | null
       responseStatus?: number | null
-      type: AppWebhookType
+      type: WebhookType
     } | null
     webhookVerifyIncoming?: {
-      __typename?: 'AppWebhook'
+      __typename?: 'Webhook'
       id: string
       createdAt: any
       updatedAt: any
-      direction: AppWebhookDirection
+      direction: WebhookDirection
       headers?: any | null
       payload?: any | null
       responseError?: string | null
       responsePayload?: any | null
       responseStatus?: number | null
-      type: AppWebhookType
+      type: WebhookType
     } | null
     webhookVerifyOutgoing?: {
-      __typename?: 'AppWebhook'
+      __typename?: 'Webhook'
       id: string
       createdAt: any
       updatedAt: any
-      direction: AppWebhookDirection
+      direction: WebhookDirection
       headers?: any | null
       payload?: any | null
       responseError?: string | null
       responsePayload?: any | null
       responseStatus?: number | null
-      type: AppWebhookType
+      type: WebhookType
     } | null
   } | null
 }
 
-export type UserAppTransactionsQueryVariables = Exact<{
+export type UserTransactionsQueryVariables = Exact<{
   appId: Scalars['String']
   appEnvId: Scalars['String']
-  input?: InputMaybe<AppTransactionListInput>
+  input?: InputMaybe<UserTransactionListInput>
 }>
 
-export type UserAppTransactionsQuery = {
+export type UserTransactionsQuery = {
   __typename?: 'Query'
   items?: Array<{
-    __typename?: 'AppTransaction'
+    __typename?: 'Transaction'
     id?: string | null
     createdAt?: any | null
     updatedAt?: any | null
     amount?: string | null
+    decimals?: number | null
     destination?: string | null
     explorerUrl?: string | null
     feePayer?: string | null
+    ip?: string | null
     mint?: string | null
     processingDuration?: number | null
     referenceId?: string | null
@@ -3229,8 +5065,10 @@ export type UserAppTransactionsQuery = {
     solanaStart?: any | null
     solanaTransaction?: any | null
     source?: string | null
-    status: AppTransactionStatus
+    status: TransactionStatus
     totalDuration?: number | null
+    tx?: string | null
+    ua?: string | null
     webhookEventDuration?: number | null
     webhookEventEnd?: any | null
     webhookEventStart?: any | null
@@ -3238,66 +5076,73 @@ export type UserAppTransactionsQuery = {
     webhookVerifyEnd?: any | null
     webhookVerifyStart?: any | null
     errors?: Array<{
-      __typename?: 'AppTransactionError'
+      __typename?: 'TransactionError'
       id?: string | null
       logs?: Array<string> | null
       message?: string | null
-      type: AppTransactionErrorType
+      type: TransactionErrorType
       instruction?: number | null
     }> | null
     webhookEventIncoming?: {
-      __typename?: 'AppWebhook'
+      __typename?: 'Webhook'
       id: string
       createdAt: any
       updatedAt: any
-      direction: AppWebhookDirection
+      direction: WebhookDirection
       headers?: any | null
       payload?: any | null
       responseError?: string | null
       responsePayload?: any | null
       responseStatus?: number | null
-      type: AppWebhookType
+      type: WebhookType
     } | null
     webhookEventOutgoing?: {
-      __typename?: 'AppWebhook'
+      __typename?: 'Webhook'
       id: string
       createdAt: any
       updatedAt: any
-      direction: AppWebhookDirection
+      direction: WebhookDirection
       headers?: any | null
       payload?: any | null
       responseError?: string | null
       responsePayload?: any | null
       responseStatus?: number | null
-      type: AppWebhookType
+      type: WebhookType
     } | null
     webhookVerifyIncoming?: {
-      __typename?: 'AppWebhook'
+      __typename?: 'Webhook'
       id: string
       createdAt: any
       updatedAt: any
-      direction: AppWebhookDirection
+      direction: WebhookDirection
       headers?: any | null
       payload?: any | null
       responseError?: string | null
       responsePayload?: any | null
       responseStatus?: number | null
-      type: AppWebhookType
+      type: WebhookType
     } | null
     webhookVerifyOutgoing?: {
-      __typename?: 'AppWebhook'
+      __typename?: 'Webhook'
       id: string
       createdAt: any
       updatedAt: any
-      direction: AppWebhookDirection
+      direction: WebhookDirection
       headers?: any | null
       payload?: any | null
       responseError?: string | null
       responsePayload?: any | null
       responseStatus?: number | null
-      type: AppWebhookType
+      type: WebhookType
     } | null
   }> | null
+  count?: {
+    __typename?: 'TransactionCounter'
+    limit?: number | null
+    page?: number | null
+    pageCount?: number | null
+    total?: number | null
+  } | null
 }
 
 export type UserAppsQueryVariables = Exact<{ [key: string]: never }>
@@ -3310,6 +5155,8 @@ export type UserAppsQuery = {
     createdAt: any
     updatedAt: any
     index: number
+    logoUrl?: string | null
+    maxEnvs: number
     name?: string | null
     defaultEnvUrl?: string | null
     settingsUrl?: string | null
@@ -3318,9 +5165,17 @@ export type UserAppsQuery = {
       id: string
       createdAt: any
       updatedAt: any
+      endpoint?: string | null
       key?: string | null
+      ipsAllowed?: Array<string> | null
+      ipsBlocked?: Array<string> | null
       name?: string | null
-      webhookAcceptIncoming?: boolean | null
+      uasAllowed?: Array<string> | null
+      uasBlocked?: Array<string> | null
+      webhookBalanceEnabled?: boolean | null
+      webhookBalanceUrl?: string | null
+      webhookBalanceThreshold?: string | null
+      webhookDebugging?: boolean | null
       webhookEventEnabled?: boolean | null
       webhookEventUrl?: string | null
       webhookSecret?: string | null
@@ -3332,6 +5187,7 @@ export type UserAppsQuery = {
         createdAt: any
         updatedAt: any
         index: number
+        maxEnvs: number
         name?: string | null
       } | null
       cluster?: {
@@ -3339,7 +5195,6 @@ export type UserAppsQuery = {
         id?: string | null
         createdAt?: any | null
         updatedAt?: any | null
-        enableStats?: boolean | null
         endpointPrivate?: string | null
         endpointPublic?: string | null
         explorer?: string | null
@@ -3420,6 +5275,8 @@ export type UserAppQuery = {
     createdAt: any
     updatedAt: any
     index: number
+    logoUrl?: string | null
+    maxEnvs: number
     name?: string | null
     defaultEnvUrl?: string | null
     settingsUrl?: string | null
@@ -3428,9 +5285,17 @@ export type UserAppQuery = {
       id: string
       createdAt: any
       updatedAt: any
+      endpoint?: string | null
       key?: string | null
+      ipsAllowed?: Array<string> | null
+      ipsBlocked?: Array<string> | null
       name?: string | null
-      webhookAcceptIncoming?: boolean | null
+      uasAllowed?: Array<string> | null
+      uasBlocked?: Array<string> | null
+      webhookBalanceEnabled?: boolean | null
+      webhookBalanceUrl?: string | null
+      webhookBalanceThreshold?: string | null
+      webhookDebugging?: boolean | null
       webhookEventEnabled?: boolean | null
       webhookEventUrl?: string | null
       webhookSecret?: string | null
@@ -3450,6 +5315,7 @@ export type UserAppQuery = {
         createdAt: any
         updatedAt: any
         index: number
+        maxEnvs: number
         name?: string | null
       } | null
       cluster?: {
@@ -3457,7 +5323,6 @@ export type UserAppQuery = {
         id?: string | null
         createdAt?: any | null
         updatedAt?: any | null
-        enableStats?: boolean | null
         endpointPrivate?: string | null
         endpointPublic?: string | null
         explorer?: string | null
@@ -3534,6 +5399,8 @@ export type UserAppQuery = {
         createdAt: any
         updatedAt: any
         index: number
+        logoUrl?: string | null
+        maxEnvs: number
         name?: string | null
         defaultEnvUrl?: string | null
         settingsUrl?: string | null
@@ -3565,9 +5432,17 @@ export type UserAppEnvQuery = {
     id: string
     createdAt: any
     updatedAt: any
+    endpoint?: string | null
     key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
     name?: string | null
-    webhookAcceptIncoming?: boolean | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
     webhookEventEnabled?: boolean | null
     webhookEventUrl?: string | null
     webhookSecret?: string | null
@@ -3581,13 +5456,20 @@ export type UserAppEnvQuery = {
       publicKey?: string | null
       type?: WalletType | null
     }> | null
-    app?: { __typename?: 'App'; id: string; createdAt: any; updatedAt: any; index: number; name?: string | null } | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
     cluster?: {
       __typename?: 'Cluster'
       id?: string | null
       createdAt?: any | null
       updatedAt?: any | null
-      enableStats?: boolean | null
       endpointPrivate?: string | null
       endpointPublic?: string | null
       explorer?: string | null
@@ -3671,7 +5553,7 @@ export type AuthTokenDetailsFragment = {
 }
 
 export type LoginMutationVariables = Exact<{
-  input: LoginInput
+  input: UserLoginInput
 }>
 
 export type LoginMutation = {
@@ -3719,73 +5601,12 @@ export type ClusterDetailsFragment = {
   id?: string | null
   createdAt?: any | null
   updatedAt?: any | null
-  enableStats?: boolean | null
   endpointPrivate?: string | null
   endpointPublic?: string | null
   explorer?: string | null
   name?: string | null
   status?: ClusterStatus | null
   type?: ClusterType | null
-}
-
-export type ClusterStatDetailsFragment = {
-  __typename?: 'ClusterStat'
-  id: string
-  createdAt: any
-  updatedAt: any
-  numSlots?: number | null
-  numTransactions: number
-  samplePeriodSecs: number
-  slot: number
-}
-
-export type ClusterTokenDetailsFragment = {
-  __typename?: 'ClusterToken'
-  address?: string | null
-  name?: string | null
-  decimals?: number | null
-  symbol?: string | null
-  logoURI?: string | null
-  tags?: Array<string> | null
-  extensions?: {
-    __typename?: 'ClusterTokenExtensions'
-    address?: string | null
-    assetContract?: string | null
-    bridgeContract?: string | null
-    coinGeckoId?: string | null
-    description?: string | null
-    discord?: string | null
-    explorer?: string | null
-    github?: string | null
-    imageUrl?: string | null
-    medium?: string | null
-    serumV3Usdc?: string | null
-    serumV3Usdt?: string | null
-    tgann?: string | null
-    tggroup?: string | null
-    twitter?: string | null
-    website?: string | null
-  } | null
-}
-
-export type ClusterTokenExtensionsDetailsFragment = {
-  __typename?: 'ClusterTokenExtensions'
-  address?: string | null
-  assetContract?: string | null
-  bridgeContract?: string | null
-  coinGeckoId?: string | null
-  description?: string | null
-  discord?: string | null
-  explorer?: string | null
-  github?: string | null
-  imageUrl?: string | null
-  medium?: string | null
-  serumV3Usdc?: string | null
-  serumV3Usdt?: string | null
-  tgann?: string | null
-  tggroup?: string | null
-  twitter?: string | null
-  website?: string | null
 }
 
 export type MintDetailsFragment = {
@@ -3809,18 +5630,17 @@ export type MintDetailsFragment = {
   type?: MintType | null
 }
 
-export type AdminAddClusterMintMutationVariables = Exact<{
-  input: MintAddInput
+export type AdminMintCreateMutationVariables = Exact<{
+  input: AdminMintCreateInput
 }>
 
-export type AdminAddClusterMintMutation = {
+export type AdminMintCreateMutation = {
   __typename?: 'Mutation'
-  adminAddClusterMint?: {
+  adminMintCreate?: {
     __typename?: 'Cluster'
     id?: string | null
     createdAt?: any | null
     updatedAt?: any | null
-    enableStats?: boolean | null
     endpointPrivate?: string | null
     endpointPublic?: string | null
     explorer?: string | null
@@ -3851,7 +5671,7 @@ export type AdminAddClusterMintMutation = {
 }
 
 export type AdminCreateClusterMutationVariables = Exact<{
-  input: ClusterCreateInput
+  input: AdminClusterCreateInput
 }>
 
 export type AdminCreateClusterMutation = {
@@ -3861,7 +5681,6 @@ export type AdminCreateClusterMutation = {
     id?: string | null
     createdAt?: any | null
     updatedAt?: any | null
-    enableStats?: boolean | null
     endpointPrivate?: string | null
     endpointPublic?: string | null
     explorer?: string | null
@@ -3882,7 +5701,6 @@ export type AdminDeleteClusterMutation = {
     id?: string | null
     createdAt?: any | null
     updatedAt?: any | null
-    enableStats?: boolean | null
     endpointPrivate?: string | null
     endpointPublic?: string | null
     explorer?: string | null
@@ -3894,7 +5712,7 @@ export type AdminDeleteClusterMutation = {
 
 export type AdminUpdateClusterMutationVariables = Exact<{
   clusterId: Scalars['String']
-  input: ClusterUpdateInput
+  input: AdminClusterUpdateInput
 }>
 
 export type AdminUpdateClusterMutation = {
@@ -3904,7 +5722,6 @@ export type AdminUpdateClusterMutation = {
     id?: string | null
     createdAt?: any | null
     updatedAt?: any | null
-    enableStats?: boolean | null
     endpointPrivate?: string | null
     endpointPublic?: string | null
     explorer?: string | null
@@ -3925,7 +5742,6 @@ export type AdminClusterQuery = {
     id?: string | null
     createdAt?: any | null
     updatedAt?: any | null
-    enableStats?: boolean | null
     endpointPrivate?: string | null
     endpointPublic?: string | null
     explorer?: string | null
@@ -3955,42 +5771,6 @@ export type AdminClusterQuery = {
   } | null
 }
 
-export type AdminClusterTokensQueryVariables = Exact<{
-  input: ClusterTokenInput
-}>
-
-export type AdminClusterTokensQuery = {
-  __typename?: 'Query'
-  items?: Array<{
-    __typename?: 'ClusterToken'
-    address?: string | null
-    name?: string | null
-    decimals?: number | null
-    symbol?: string | null
-    logoURI?: string | null
-    tags?: Array<string> | null
-    extensions?: {
-      __typename?: 'ClusterTokenExtensions'
-      address?: string | null
-      assetContract?: string | null
-      bridgeContract?: string | null
-      coinGeckoId?: string | null
-      description?: string | null
-      discord?: string | null
-      explorer?: string | null
-      github?: string | null
-      imageUrl?: string | null
-      medium?: string | null
-      serumV3Usdc?: string | null
-      serumV3Usdt?: string | null
-      tgann?: string | null
-      tggroup?: string | null
-      twitter?: string | null
-      website?: string | null
-    } | null
-  }> | null
-}
-
 export type AdminClustersQueryVariables = Exact<{ [key: string]: never }>
 
 export type AdminClustersQuery = {
@@ -4000,7 +5780,6 @@ export type AdminClustersQuery = {
     id?: string | null
     createdAt?: any | null
     updatedAt?: any | null
-    enableStats?: boolean | null
     endpointPrivate?: string | null
     endpointPublic?: string | null
     explorer?: string | null
@@ -4030,22 +5809,95 @@ export type AdminClustersQuery = {
   }> | null
 }
 
-export type ClusterStatsQueryVariables = Exact<{
+export type UserClusterQueryVariables = Exact<{
   clusterId: Scalars['String']
 }>
 
-export type ClusterStatsQuery = {
+export type UserClusterQuery = {
+  __typename?: 'Query'
+  item?: {
+    __typename?: 'Cluster'
+    id?: string | null
+    createdAt?: any | null
+    updatedAt?: any | null
+    endpointPrivate?: string | null
+    endpointPublic?: string | null
+    explorer?: string | null
+    name?: string | null
+    status?: ClusterStatus | null
+    type?: ClusterType | null
+    mints?: Array<{
+      __typename?: 'Mint'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
+      addMemo?: boolean | null
+      address?: string | null
+      airdropAmount?: number | null
+      airdropMax?: number | null
+      airdropPublicKey?: string | null
+      coinGeckoId?: string | null
+      decimals?: number | null
+      default?: boolean | null
+      enabled?: boolean | null
+      logoUrl?: string | null
+      name?: string | null
+      order?: number | null
+      symbol?: string | null
+      type?: MintType | null
+    }> | null
+  } | null
+}
+
+export type UserClustersQueryVariables = Exact<{ [key: string]: never }>
+
+export type UserClustersQuery = {
   __typename?: 'Query'
   items?: Array<{
-    __typename?: 'ClusterStat'
-    id: string
-    createdAt: any
-    updatedAt: any
-    numSlots?: number | null
-    numTransactions: number
-    samplePeriodSecs: number
-    slot: number
+    __typename?: 'Cluster'
+    id?: string | null
+    createdAt?: any | null
+    updatedAt?: any | null
+    endpointPrivate?: string | null
+    endpointPublic?: string | null
+    explorer?: string | null
+    name?: string | null
+    status?: ClusterStatus | null
+    type?: ClusterType | null
+    mints?: Array<{
+      __typename?: 'Mint'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
+      addMemo?: boolean | null
+      address?: string | null
+      airdropAmount?: number | null
+      airdropMax?: number | null
+      airdropPublicKey?: string | null
+      coinGeckoId?: string | null
+      decimals?: number | null
+      default?: boolean | null
+      enabled?: boolean | null
+      logoUrl?: string | null
+      name?: string | null
+      order?: number | null
+      symbol?: string | null
+      type?: MintType | null
+    }> | null
   }> | null
+}
+
+export type WebConfigQueryVariables = Exact<{ [key: string]: never }>
+
+export type WebConfigQuery = {
+  __typename?: 'Query'
+  config: {
+    __typename?: 'WebConfig'
+    discordEnabled: boolean
+    githubEnabled: boolean
+    googleEnabled: boolean
+    passwordEnabled: boolean
+  }
 }
 
 export type UptimeQueryVariables = Exact<{ [key: string]: never }>
@@ -4073,7 +5925,7 @@ export type UserEmailDetailsFragment = {
 }
 
 export type AdminCreateUserMutationVariables = Exact<{
-  input: UserCreateInput
+  input: AdminUserCreateInput
 }>
 
 export type AdminCreateUserMutation = {
@@ -4112,7 +5964,7 @@ export type AdminDeleteUserMutation = {
 
 export type AdminUpdateUserMutationVariables = Exact<{
   userId: Scalars['String']
-  input: UserUpdateInput
+  input: AdminUserUpdateInput
 }>
 
 export type AdminUpdateUserMutation = {
@@ -4158,6 +6010,8 @@ export type AdminUserQuery = {
         createdAt: any
         updatedAt: any
         index: number
+        logoUrl?: string | null
+        maxEnvs: number
         name?: string | null
         defaultEnvUrl?: string | null
         settingsUrl?: string | null
@@ -4181,6 +6035,25 @@ export type AdminUserQuery = {
 export type AdminUsersQueryVariables = Exact<{ [key: string]: never }>
 
 export type AdminUsersQuery = {
+  __typename?: 'Query'
+  items?: Array<{
+    __typename?: 'User'
+    id: string
+    createdAt: any
+    updatedAt: any
+    avatarUrl?: string | null
+    email?: string | null
+    name?: string | null
+    username: string
+    role?: UserRole | null
+  }> | null
+}
+
+export type UserSearchUsersQueryVariables = Exact<{
+  input: UserSearchUserInput
+}>
+
+export type UserSearchUsersQuery = {
   __typename?: 'Query'
   items?: Array<{
     __typename?: 'User'
@@ -4249,9 +6122,17 @@ export type AdminWalletQuery = {
       id: string
       createdAt: any
       updatedAt: any
+      endpoint?: string | null
       key?: string | null
+      ipsAllowed?: Array<string> | null
+      ipsBlocked?: Array<string> | null
       name?: string | null
-      webhookAcceptIncoming?: boolean | null
+      uasAllowed?: Array<string> | null
+      uasBlocked?: Array<string> | null
+      webhookBalanceEnabled?: boolean | null
+      webhookBalanceUrl?: string | null
+      webhookBalanceThreshold?: string | null
+      webhookDebugging?: boolean | null
       webhookEventEnabled?: boolean | null
       webhookEventUrl?: string | null
       webhookSecret?: string | null
@@ -4263,6 +6144,7 @@ export type AdminWalletQuery = {
         createdAt: any
         updatedAt: any
         index: number
+        maxEnvs: number
         name?: string | null
       } | null
       cluster?: {
@@ -4270,7 +6152,6 @@ export type AdminWalletQuery = {
         id?: string | null
         createdAt?: any | null
         updatedAt?: any | null
-        enableStats?: boolean | null
         endpointPrivate?: string | null
         endpointPublic?: string | null
         explorer?: string | null
@@ -4389,9 +6270,17 @@ export type AdminWalletsQuery = {
         id: string
         createdAt: any
         updatedAt: any
+        endpoint?: string | null
         key?: string | null
+        ipsAllowed?: Array<string> | null
+        ipsBlocked?: Array<string> | null
         name?: string | null
-        webhookAcceptIncoming?: boolean | null
+        uasAllowed?: Array<string> | null
+        uasBlocked?: Array<string> | null
+        webhookBalanceEnabled?: boolean | null
+        webhookBalanceUrl?: string | null
+        webhookBalanceThreshold?: string | null
+        webhookDebugging?: boolean | null
         webhookEventEnabled?: boolean | null
         webhookEventUrl?: string | null
         webhookSecret?: string | null
@@ -4403,6 +6292,7 @@ export type AdminWalletsQuery = {
           createdAt: any
           updatedAt: any
           index: number
+          maxEnvs: number
           name?: string | null
         } | null
         cluster?: {
@@ -4410,7 +6300,6 @@ export type AdminWalletsQuery = {
           id?: string | null
           createdAt?: any | null
           updatedAt?: any | null
-          enableStats?: boolean | null
           endpointPrivate?: string | null
           endpointPublic?: string | null
           explorer?: string | null
@@ -4481,9 +6370,17 @@ export type AdminWalletsQuery = {
       id: string
       createdAt: any
       updatedAt: any
+      endpoint?: string | null
       key?: string | null
+      ipsAllowed?: Array<string> | null
+      ipsBlocked?: Array<string> | null
       name?: string | null
-      webhookAcceptIncoming?: boolean | null
+      uasAllowed?: Array<string> | null
+      uasBlocked?: Array<string> | null
+      webhookBalanceEnabled?: boolean | null
+      webhookBalanceUrl?: string | null
+      webhookBalanceThreshold?: string | null
+      webhookDebugging?: boolean | null
       webhookEventEnabled?: boolean | null
       webhookEventUrl?: string | null
       webhookSecret?: string | null
@@ -4495,6 +6392,7 @@ export type AdminWalletsQuery = {
         createdAt: any
         updatedAt: any
         index: number
+        maxEnvs: number
         name?: string | null
       } | null
       cluster?: {
@@ -4502,7 +6400,6 @@ export type AdminWalletsQuery = {
         id?: string | null
         createdAt?: any | null
         updatedAt?: any | null
-        enableStats?: boolean | null
         endpointPrivate?: string | null
         endpointPublic?: string | null
         explorer?: string | null
@@ -4599,9 +6496,17 @@ export type UserGenerateWalletMutation = {
       id: string
       createdAt: any
       updatedAt: any
+      endpoint?: string | null
       key?: string | null
+      ipsAllowed?: Array<string> | null
+      ipsBlocked?: Array<string> | null
       name?: string | null
-      webhookAcceptIncoming?: boolean | null
+      uasAllowed?: Array<string> | null
+      uasBlocked?: Array<string> | null
+      webhookBalanceEnabled?: boolean | null
+      webhookBalanceUrl?: string | null
+      webhookBalanceThreshold?: string | null
+      webhookDebugging?: boolean | null
       webhookEventEnabled?: boolean | null
       webhookEventUrl?: string | null
       webhookSecret?: string | null
@@ -4613,6 +6518,7 @@ export type UserGenerateWalletMutation = {
         createdAt: any
         updatedAt: any
         index: number
+        maxEnvs: number
         name?: string | null
       } | null
       cluster?: {
@@ -4620,7 +6526,6 @@ export type UserGenerateWalletMutation = {
         id?: string | null
         createdAt?: any | null
         updatedAt?: any | null
-        enableStats?: boolean | null
         endpointPrivate?: string | null
         endpointPublic?: string | null
         explorer?: string | null

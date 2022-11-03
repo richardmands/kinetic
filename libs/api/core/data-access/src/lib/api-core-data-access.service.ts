@@ -1,15 +1,29 @@
-import { AirdropConfig } from '@kin-kinetic/airdrop'
+import { AirdropConfig } from '@kin-kinetic/api/airdrop/util'
 import { hashPassword } from '@kin-kinetic/api/auth/util'
 import { ApiConfigDataAccessService } from '@kin-kinetic/api/config/data-access'
+import { getVerboseLogger } from '@kin-kinetic/api/core/util'
 import { Keypair } from '@kin-kinetic/keypair'
 import { getPublicKey, Solana } from '@kin-kinetic/solana'
 import { Injectable, Logger, NotFoundException, OnModuleInit, UnauthorizedException } from '@nestjs/common'
 import { Counter } from '@opentelemetry/api-metrics'
-import { App, AppEnv, AppUserRole, Cluster, ClusterStatus, Mint, PrismaClient, UserRole, Wallet } from '@prisma/client'
+import {
+  App,
+  AppEnv,
+  AppUserRole,
+  Cluster,
+  ClusterStatus,
+  Mint,
+  Prisma,
+  PrismaClient,
+  UserIdentityType,
+  UserRole,
+  Wallet,
+  WalletType,
+} from '@prisma/client'
 import { omit } from 'lodash'
 import { MetricService } from 'nestjs-otel'
 
-type AppEnvironment = AppEnv & {
+export type AppEnvironment = AppEnv & {
   app: App
   cluster: Cluster
   mints: { addMemo: boolean; mint: Mint; wallet: Wallet }[]
@@ -78,6 +92,22 @@ export class ApiCoreDataAccessService extends PrismaClient implements OnModuleIn
       throw new NotFoundException(`User ${userId} does not have access to app ${appId}.`)
     }
     return appUser?.role
+  }
+
+  async generateAppWallet(userId: string, index: number) {
+    const { publicKey, secretKey } = this.getAppKeypair(index)
+
+    return this.wallet.create({ data: { secretKey, publicKey, type: WalletType.Provisioned, ownerId: userId } })
+  }
+
+  private getAppKeypair(index: number): Keypair {
+    const envVar = process.env[`APP_${index}_FEE_PAYER_BYTE_ARRAY`]
+    if (envVar) {
+      this.logger.verbose(`getAppKeypair app ${index}: read from env var`)
+      return Keypair.fromByteArray(JSON.parse(envVar))
+    }
+    this.logger.verbose(`getAppKeypair app ${index}: generated new keypair`)
+    return Keypair.random()
   }
 
   getActiveClusters() {
@@ -184,127 +214,104 @@ export class ApiCoreDataAccessService extends PrismaClient implements OnModuleIn
       this.connections.set(
         appKey,
         new Solana(env.cluster.endpointPrivate, {
-          logger: new Logger(`@kin-kinetic/solana:${appKey}`),
+          logger: getVerboseLogger(`@kin-kinetic/solana:${appKey}`),
         }),
       )
     }
     return this.connections.get(appKey)
   }
 
-  getUserByEmail(email: string) {
-    return this.user.findFirst({ where: { emails: { some: { email } } }, include: { emails: true } })
+  async getUserByEmail(email: string) {
+    const found = await this.userEmail.findUnique({ where: { email } })
+
+    if (found) {
+      return this.getUserById(found.ownerId)
+    }
   }
 
   getUserById(userId: string) {
-    return this.user.findUnique({ where: { id: userId }, include: { emails: true } })
+    return this.user.findUnique({ where: { id: userId }, include: { emails: true, identities: true } })
+  }
+
+  async getUserByIdentity(type: UserIdentityType, externalId: string) {
+    return this.user.findFirst({
+      where: { identities: { some: { type, externalId } } },
+      include: { emails: true, identities: true },
+    })
   }
 
   getUserByUsername(username: string) {
-    return this.user.findUnique({ where: { username }, include: { emails: true } })
+    return this.user.findUnique({ where: { username }, include: { emails: true, identities: true } })
   }
 
   async configureDefaultData() {
     await this.configureDefaultUsers()
     await this.configureDefaultClusters()
-    await this.configureDefaultMints()
   }
 
   private async configureDefaultUsers() {
-    const users = [
-      {
-        role: UserRole.Admin,
-        avatarUrl: 'https://avatars.dicebear.com/api/open-peeps/aliceal.svg',
-        id: 'alice',
-        name: 'Alice',
-        username: this.config.adminUsername,
-        password: this.config.adminPassword,
-      },
-      {
-        role: UserRole.User,
-        avatarUrl: 'https://avatars.dicebear.com/api/open-peeps/bob42.svg',
-        id: 'bob',
-        name: 'Bob',
-        username: 'bob',
-        password: this.config.adminPassword.replace('alice', 'bob'),
-      },
-      {
-        role: UserRole.User,
-        avatarUrl: 'https://avatars.dicebear.com/api/open-peeps/charlie42222.svg',
-        id: 'charlie',
-        name: 'Charlie',
-        username: 'charlie',
-        password: this.config.adminPassword.replace('alice', 'charlie'),
-      },
-      {
-        role: UserRole.User,
-        avatarUrl: 'https://avatars.dicebear.com/api/open-peeps/dave42.svg',
-        id: 'dave',
-        name: 'Dave',
-        username: 'dave',
-        password: this.config.adminPassword.replace('alice', 'dave'),
-      },
-    ]
-    for (const user of users) {
+    for (const user of this.config.authUsers) {
       await this.configureDefaultUser(user)
     }
   }
 
   private async configureDefaultUser({
-    id,
     avatarUrl,
-    name,
+    email,
     username,
     password,
     role,
   }: {
-    id: string
-    avatarUrl: string
-    name: string
+    avatarUrl?: string
+    email?: string
     username: string
     password: string
     role: UserRole
   }) {
-    const existing = await this.user.count({ where: { id } })
+    const existing = await this.user.count({ where: { username } })
     if (existing < 1) {
-      const email = `${username}@example.com`
       await this.user.create({
         data: {
-          id,
           avatarUrl,
-          name,
-          password: hashPassword(password),
+          password: password ? hashPassword(password) : undefined,
           role,
-          username: id,
-          emails: {
-            create: { email },
-          },
+          username: username,
+          emails: email
+            ? {
+                create: { email },
+              }
+            : undefined,
         },
       })
-      this.logger.verbose(`Created new ${role} with username ${username} and password ${password}`)
+      this.logger.log(`Provisioned ${role} ${username} ${password ? 'and password' : 'an external provider'}`)
       return
     }
-    this.logger.verbose(`Log in as ${role} with username ${username} and password ${password}`)
+    this.logger.log(`Log in with ${role} ${username} ${password ? 'and password' : 'an external provider'}`)
   }
 
   private async configureDefaultClusters() {
     return Promise.all(
-      this.config.clusters
+      this.config.provisionedClusters
         .filter((cluster) => !!cluster)
-        .map((cluster) =>
-          this.cluster
+        .map((item) => {
+          const { mints, ...cluster } = item
+          return this.cluster
             .upsert({
               where: { id: cluster.id },
               update: { ...omit(cluster, 'status') },
               create: { ...cluster },
             })
-            .then((res) => this.logger.verbose(`Configured cluster ${res.name} (${res.status})`)),
-        ),
+            .then((res) => {
+              this.logger.log(`Configured cluster ${res.name} (${res.status})`)
+              return this.configureMints(mints)
+            })
+        }),
     )
   }
 
-  private async configureDefaultMints() {
+  private async configureMints(mints: Prisma.MintCreateInput[]) {
     return Promise.all(
-      this.config.mints.map((mint) =>
+      mints.map((mint) =>
         this.mint
           .upsert({
             where: { id: mint.id },
@@ -315,15 +322,17 @@ export class ApiCoreDataAccessService extends PrismaClient implements OnModuleIn
           .then((res) => {
             if (res.airdropSecretKey) {
               this.airdropConfig.set(mint.id, {
-                airdropAmount: mint.airdropAmount || this.config.defaultMintAirdropAmount,
-                airdropMax: mint.airdropMax || this.config.defaultMintAirdropMax,
+                airdropAmount: mint.airdropAmount || 1000,
+                airdropMax: mint.airdropMax || 50000,
                 decimals: mint.decimals,
                 feePayer: Keypair.fromByteArray(JSON.parse(res.airdropSecretKey)).solana,
                 mint: getPublicKey(mint.address),
               })
             }
-            this.logger.verbose(
-              `Configured mint ${res.name} (${res.decimals} decimals) on ${res.cluster?.name} ${
+            this.logger.log(
+              `[${res.symbol}] Configured mint ${res.name} (${res.decimals} decimals) (${res?.address}) on ${
+                res?.cluster?.name
+              } ${
                 this.airdropConfig.has(mint.id)
                   ? `(Airdrop ${this.airdropConfig.get(mint.id).feePayer.publicKey?.toBase58()})`
                   : ''
@@ -332,5 +341,12 @@ export class ApiCoreDataAccessService extends PrismaClient implements OnModuleIn
           }),
       ),
     )
+  }
+
+  async deleteAppEnv(appId: string, appEnvId: string) {
+    await this.webhook.deleteMany({ where: { appEnv: { appId, id: appEnvId } } })
+    await this.transactionError.deleteMany({ where: { transaction: { appEnv: { appId, id: appEnvId } } } })
+    await this.transaction.deleteMany({ where: { appEnv: { appId, id: appEnvId } } })
+    return this.appEnv.delete({ where: { id: appEnvId } })
   }
 }

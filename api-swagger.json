@@ -60,7 +60,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AppTransaction"
+                  "$ref": "#/components/schemas/Transaction"
                 }
               }
             }
@@ -256,26 +256,6 @@
         "tags": ["airdrop"]
       }
     },
-    "/api/airdrop/stats": {
-      "get": {
-        "operationId": "airdropStats",
-        "summary": "",
-        "parameters": [],
-        "responses": {
-          "default": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AirdropStats"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["airdrop"]
-      }
-    },
     "/api/app/{environment}/{index}/config": {
       "get": {
         "operationId": "getAppConfig",
@@ -453,7 +433,52 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AppTransaction"
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["transaction"]
+      }
+    },
+    "/api/transaction/transaction/{environment}/{index}/{signature}": {
+      "get": {
+        "operationId": "getTransaction",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "environment",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "index",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "signature",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTransactionResponse"
                 }
               }
             }
@@ -464,9 +489,9 @@
     }
   },
   "info": {
-    "title": "Kinetic",
+    "title": "@kin-kinetic/api",
     "description": "The OpenAPI definition of the Kinetic API",
-    "version": "1.0",
+    "version": "1.0.0-rc.7",
     "contact": {}
   },
   "tags": [
@@ -477,37 +502,55 @@
   ],
   "servers": [
     {
-      "url": "https://devnet.kinetic.kin.org"
-    },
-    {
-      "url": "https://mainnet.kinetic.kin.org"
-    },
-    {
       "url": "http://localhost:3000"
+    },
+    {
+      "url": "https://sandbox.kinetic.host"
     }
   ],
   "components": {
     "schemas": {
+      "Commitment": {
+        "type": "string",
+        "enum": ["Confirmed", "Finalized", "Processed"]
+      },
       "CreateAccountRequest": {
         "type": "object",
         "properties": {
+          "commitment": {
+            "$ref": "#/components/schemas/Commitment"
+          },
           "environment": {
             "type": "string"
           },
           "index": {
             "type": "integer"
           },
+          "lastValidBlockHeight": {
+            "type": "integer"
+          },
           "mint": {
             "type": "string"
           },
-          "tx": {
+          "referenceId": {
             "type": "string",
-            "format": "byte"
+            "nullable": true
+          },
+          "referenceType": {
+            "type": "string",
+            "nullable": true
+          },
+          "tx": {
+            "type": "string"
           }
         },
-        "required": ["environment", "index", "mint", "tx"]
+        "required": ["commitment", "environment", "index", "lastValidBlockHeight", "mint", "tx"]
       },
-      "AppTransactionError": {
+      "TransactionErrorType": {
+        "type": "string",
+        "enum": ["BadNonce", "InvalidAccount", "SomeError", "Timeout", "Unknown", "WebhookFailed"]
+      },
+      "TransactionError": {
         "type": "object",
         "properties": {
           "id": {
@@ -523,8 +566,7 @@
             "type": "string"
           },
           "type": {
-            "type": "string",
-            "enum": ["BadNonce", "InvalidAccount", "SomeError", "Timeout", "Unknown", "WebhookFailed"]
+            "$ref": "#/components/schemas/TransactionErrorType"
           },
           "instruction": {
             "type": "integer"
@@ -532,7 +574,11 @@
         },
         "required": ["id", "logs", "message", "type", "instruction"]
       },
-      "AppTransaction": {
+      "TransactionStatus": {
+        "type": "string",
+        "enum": ["Committed", "Confirmed", "Failed", "Finalized", "Processing"]
+      },
+      "Transaction": {
         "type": "object",
         "properties": {
           "id": {
@@ -553,6 +599,10 @@
             "type": "string",
             "nullable": true
           },
+          "decimals": {
+            "type": "number",
+            "nullable": true
+          },
           "destination": {
             "type": "string",
             "nullable": true
@@ -561,7 +611,7 @@
             "nullable": true,
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AppTransactionError"
+              "$ref": "#/components/schemas/TransactionError"
             }
           },
           "explorerUrl": {
@@ -569,6 +619,10 @@
             "nullable": true
           },
           "feePayer": {
+            "type": "string",
+            "nullable": true
+          },
+          "ip": {
             "type": "string",
             "nullable": true
           },
@@ -624,12 +678,19 @@
             "nullable": true
           },
           "status": {
-            "type": "string",
             "nullable": true,
-            "enum": ["Committed", "Confirmed", "Failed", "Finalized", "Processing"]
+            "$ref": "#/components/schemas/TransactionStatus"
           },
           "totalDuration": {
             "type": "number",
+            "nullable": true
+          },
+          "tx": {
+            "type": "string",
+            "nullable": true
+          },
+          "ua": {
+            "type": "string",
             "nullable": true
           },
           "webhookEventStart": {
@@ -660,37 +721,7 @@
             "type": "number",
             "nullable": true
           }
-        },
-        "required": [
-          "id",
-          "createdAt",
-          "updatedAt",
-          "amount",
-          "destination",
-          "errors",
-          "explorerUrl",
-          "feePayer",
-          "mint",
-          "processingDuration",
-          "referenceId",
-          "referenceType",
-          "signature",
-          "solanaCommitted",
-          "solanaCommittedDuration",
-          "solanaFinalized",
-          "solanaFinalizedDuration",
-          "solanaStart",
-          "solanaTransaction",
-          "source",
-          "status",
-          "totalDuration",
-          "webhookEventStart",
-          "webhookEventEnd",
-          "webhookEventDuration",
-          "webhookVerifyStart",
-          "webhookVerifyEnd",
-          "webhookVerifyDuration"
-        ]
+        }
       },
       "BalanceToken": {
         "type": "object",
@@ -701,11 +732,15 @@
           "balance": {
             "type": "string"
           },
+          "decimals": {
+            "type": "integer",
+            "default": "0"
+          },
           "mint": {
             "type": "string"
           }
         },
-        "required": ["account", "balance", "mint"]
+        "required": ["account", "balance", "decimals", "mint"]
       },
       "BalanceResponse": {
         "type": "object",
@@ -732,19 +767,23 @@
             "type": "string"
           },
           "slot": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
           },
           "err": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "memo": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "blockTime": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
           }
         },
-        "required": ["signature", "slot", "err", "memo", "blockTime"]
+        "required": ["signature"]
       },
       "HistoryResponse": {
         "type": "object",
@@ -768,11 +807,11 @@
             "type": "string"
           },
           "amount": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "commitment": {
-            "type": "string",
-            "enum": ["Confirmed", "Finalized", "Processed"]
+            "$ref": "#/components/schemas/Commitment"
           },
           "environment": {
             "type": "string"
@@ -795,48 +834,6 @@
         },
         "required": ["signature"]
       },
-      "AirdropStatsCounts": {
-        "type": "object",
-        "properties": {
-          "averageValue": {
-            "type": "integer"
-          },
-          "total": {
-            "type": "integer"
-          },
-          "totalValue": {
-            "type": "integer"
-          }
-        },
-        "required": ["averageValue", "total", "totalValue"]
-      },
-      "AirdropStatsDate": {
-        "type": "object",
-        "properties": {
-          "date": {
-            "type": "string"
-          },
-          "count": {
-            "type": "integer"
-          }
-        },
-        "required": ["date", "count"]
-      },
-      "AirdropStats": {
-        "type": "object",
-        "properties": {
-          "counts": {
-            "$ref": "#/components/schemas/AirdropStatsCounts"
-          },
-          "dates": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AirdropStatsDate"
-            }
-          }
-        },
-        "required": ["counts", "dates"]
-      },
       "AppConfigApp": {
         "type": "object",
         "properties": {
@@ -848,6 +845,22 @@
           }
         },
         "required": ["index", "name"]
+      },
+      "AppConfigApi": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "version"]
+      },
+      "ClusterType": {
+        "type": "string",
+        "enum": ["Custom", "SolanaDevnet", "SolanaMainnet", "SolanaTestnet"]
       },
       "AppConfigCluster": {
         "type": "object",
@@ -862,8 +875,7 @@
             "type": "string"
           },
           "type": {
-            "type": "string",
-            "enum": ["Custom", "SolanaDevnet", "SolanaMainnet", "SolanaTestnet"]
+            "$ref": "#/components/schemas/ClusterType"
           }
         },
         "required": ["endpoint", "id", "name", "type"]
@@ -893,10 +905,12 @@
             "type": "boolean"
           },
           "airdropAmount": {
-            "type": "integer"
+            "type": "integer",
+            "nullable": true
           },
           "airdropMax": {
-            "type": "integer"
+            "type": "integer",
+            "nullable": true
           },
           "decimals": {
             "type": "integer"
@@ -938,6 +952,9 @@
           "app": {
             "$ref": "#/components/schemas/AppConfigApp"
           },
+          "api": {
+            "$ref": "#/components/schemas/AppConfigApi"
+          },
           "environment": {
             "$ref": "#/components/schemas/AppConfigEnvironment"
           },
@@ -951,7 +968,7 @@
             }
           }
         },
-        "required": ["app", "environment", "mint", "mints"]
+        "required": ["app", "api", "environment", "mint", "mints"]
       },
       "AppHealth": {
         "type": "object",
@@ -994,8 +1011,7 @@
         "type": "object",
         "properties": {
           "commitment": {
-            "type": "string",
-            "enum": ["Confirmed", "Finalized", "Processed"]
+            "$ref": "#/components/schemas/Commitment"
           },
           "environment": {
             "type": "string"
@@ -1018,20 +1034,139 @@
             "nullable": true
           },
           "tx": {
-            "type": "string",
-            "format": "byte"
+            "type": "string"
           }
         },
-        "required": [
-          "commitment",
-          "environment",
-          "index",
-          "mint",
-          "lastValidBlockHeight",
-          "referenceId",
-          "referenceType",
-          "tx"
-        ]
+        "required": ["commitment", "environment", "index", "mint", "lastValidBlockHeight", "tx"]
+      },
+      "SignatureStatus": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "number",
+            "nullable": true
+          },
+          "confirmations": {
+            "type": "number",
+            "nullable": true
+          },
+          "err": {
+            "type": "object",
+            "nullable": true
+          },
+          "confirmationStatus": {
+            "type": "string",
+            "enum": ["processed", "confirmed", "finalized"],
+            "nullable": true
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "properties": {}
+      },
+      "TransactionData": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/Message"
+          },
+          "signatures": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["message", "signatures"]
+      },
+      "ConfirmedTransactionMeta": {
+        "type": "object",
+        "properties": {
+          "fee": {
+            "type": "number",
+            "nullable": true
+          },
+          "innerInstructions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "preBalances": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "postBalances": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "logMessages": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "preTokenBalances": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "postTokenBalances": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "err": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": ["innerInstructions", "preBalances", "postBalances"]
+      },
+      "TransactionResponse": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "number",
+            "nullable": true
+          },
+          "transaction": {
+            "$ref": "#/components/schemas/TransactionData"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ConfirmedTransactionMeta"
+          },
+          "blockTime": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": ["transaction", "meta"]
+      },
+      "GetTransactionResponse": {
+        "type": "object",
+        "properties": {
+          "signature": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SignatureStatus"
+          },
+          "transaction": {
+            "$ref": "#/components/schemas/TransactionResponse"
+          }
+        },
+        "required": ["signature", "status", "transaction"]
       }
     }
   }

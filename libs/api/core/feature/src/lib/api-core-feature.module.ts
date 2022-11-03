@@ -6,15 +6,19 @@ import { ApiClusterFeatureModule } from '@kin-kinetic/api/cluster/feature'
 import { ApiConfigDataAccessModule, ApiConfigDataAccessService } from '@kin-kinetic/api/config/data-access'
 import { ApiConfigFeatureModule } from '@kin-kinetic/api/config/feature'
 import { ApiCoreDataAccessModule } from '@kin-kinetic/api/core/data-access'
+import { ApiCronDataAccessModule } from '@kin-kinetic/api/cron/data-access'
 import { ApiTransactionFeatureModule } from '@kin-kinetic/api/transaction/feature'
 import { ApiUserFeatureModule } from '@kin-kinetic/api/user/feature'
 import { ApiWalletFeatureModule } from '@kin-kinetic/api/wallet/feature'
+import { ApiWebhookFeatureModule } from '@kin-kinetic/api/webhook/feature'
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { Module } from '@nestjs/common'
 import { GraphQLModule } from '@nestjs/graphql'
 import { ScheduleModule } from '@nestjs/schedule'
 import { ServeStaticModule } from '@nestjs/serve-static'
+import { OgmaModule } from '@ogma/nestjs-module'
 import { OpenTelemetryModule } from 'nestjs-otel'
+import { ApiCoreFeatureOgmaConfig } from './api-core-feature-ogma-config'
 import { ApiCoreFeatureController } from './api-core-feature.controller'
 import { ApiCoreFeatureResolver } from './api-core-feature.resolver'
 import { serveStaticFactory } from './serve-static.factory'
@@ -23,9 +27,14 @@ import { serveStaticFactory } from './serve-static.factory'
   controllers: [ApiCoreFeatureController],
   providers: [ApiCoreFeatureResolver],
   imports: [
+    OgmaModule.forRootAsync({
+      useClass: ApiCoreFeatureOgmaConfig,
+      imports: [ApiConfigDataAccessModule],
+      inject: [ApiConfigDataAccessService],
+    }),
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
-      imports: [ApiConfigDataAccessModule],
+      imports: [ApiConfigDataAccessModule, ApiWebhookFeatureModule],
       inject: [ApiConfigDataAccessService],
       useFactory: (cfg: ApiConfigDataAccessService) => cfg.graphqlConfig,
     }),
@@ -37,9 +46,11 @@ import { serveStaticFactory } from './serve-static.factory'
     ApiClusterFeatureModule,
     ApiConfigFeatureModule,
     ApiCoreDataAccessModule,
+    ApiCronDataAccessModule,
     ApiTransactionFeatureModule,
     ApiUserFeatureModule,
     ApiWalletFeatureModule,
+    ApiWebhookFeatureModule,
     OpenTelemetryModule.forRootAsync({
       imports: [ApiConfigDataAccessModule],
       inject: [ApiConfigDataAccessService],
