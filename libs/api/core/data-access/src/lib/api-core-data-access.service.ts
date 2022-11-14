@@ -1,5 +1,6 @@
 import { AirdropConfig } from '@kin-kinetic/api/airdrop/util'
 import { hashPassword } from '@kin-kinetic/api/auth/util'
+import { ProvisionedCluster } from '@kin-kinetic/api/cluster/util'
 import { ApiConfigDataAccessService } from '@kin-kinetic/api/config/data-access'
 import { getVerboseLogger } from '@kin-kinetic/api/core/util'
 import { Keypair } from '@kin-kinetic/keypair'
@@ -20,7 +21,6 @@ import {
   Wallet,
   WalletType,
 } from '@prisma/client'
-import { omit } from 'lodash'
 import { MetricService } from 'nestjs-otel'
 
 export type AppEnvironment = AppEnv & {
@@ -98,6 +98,28 @@ export class ApiCoreDataAccessService extends PrismaClient implements OnModuleIn
     const { publicKey, secretKey } = this.getAppKeypair(index)
 
     return this.wallet.create({ data: { secretKey, publicKey, type: WalletType.Provisioned, ownerId: userId } })
+  }
+
+  getAirdropConfig(mint: Mint, cluster: Cluster) {
+    if (!this.airdropConfig.get(mint.id)) {
+      if (!mint.airdropSecretKey) {
+        throw new Error(`Airdrop secret key not set for mint ${mint.id}.`)
+      }
+      const feePayer = Keypair.fromByteArray(JSON.parse(mint.airdropSecretKey)).solana
+      this.airdropConfig.set(mint.id, {
+        airdropAmount: mint.airdropAmount || 1000,
+        airdropMax: mint.airdropMax || 50000,
+        decimals: mint.decimals,
+        feePayer,
+        mint: getPublicKey(mint.address),
+      })
+      this.logger.log(
+        `[${cluster.name}/${mint.symbol}] Configured Airdrop wallet ${feePayer.publicKey.toBase58()} for ${
+          mint.name
+        } (${mint.decimals} decimals) (${mint?.address})`,
+      )
+    }
+    return this.airdropConfig.get(mint.id)
   }
 
   private getAppKeypair(index: number): Keypair {
@@ -217,6 +239,7 @@ export class ApiCoreDataAccessService extends PrismaClient implements OnModuleIn
           logger: getVerboseLogger(`@kin-kinetic/solana:${appKey}`),
         }),
       )
+      this.logger.log(`Created new connection for ${appKey}`)
     }
     return this.connections.get(appKey)
   }
@@ -291,54 +314,34 @@ export class ApiCoreDataAccessService extends PrismaClient implements OnModuleIn
 
   private async configureDefaultClusters() {
     return Promise.all(
-      this.config.provisionedClusters
-        .filter((cluster) => !!cluster)
-        .map((item) => {
-          const { mints, ...cluster } = item
-          return this.cluster
-            .upsert({
-              where: { id: cluster.id },
-              update: { ...omit(cluster, 'status') },
-              create: { ...cluster },
-            })
-            .then((res) => {
-              this.logger.log(`Configured cluster ${res.name} (${res.status})`)
-              return this.configureMints(mints)
-            })
-        }),
+      this.config.provisionedClusters.filter((cluster) => !!cluster).map((item) => this.configureDefaultCluster(item)),
     )
+  }
+
+  private async configureDefaultCluster(item: ProvisionedCluster) {
+    const { mints, ...cluster } = item
+    const existing = await this.cluster.findUnique({ where: { id: cluster.id } })
+
+    if (existing) {
+      this.logger.log(`Cluster ${existing.name} already configured: (${existing.status})`)
+      return
+    }
+
+    return this.cluster.create({ data: cluster }).then((res) => {
+      this.logger.log(`Configured cluster ${res.name} (${res.status})`)
+      return this.configureMints(mints)
+    })
   }
 
   private async configureMints(mints: Prisma.MintCreateInput[]) {
     return Promise.all(
       mints.map((mint) =>
-        this.mint
-          .upsert({
-            where: { id: mint.id },
-            update: { ...mint },
-            create: { ...mint },
-            include: { cluster: true },
-          })
-          .then((res) => {
-            if (res.airdropSecretKey) {
-              this.airdropConfig.set(mint.id, {
-                airdropAmount: mint.airdropAmount || 1000,
-                airdropMax: mint.airdropMax || 50000,
-                decimals: mint.decimals,
-                feePayer: Keypair.fromByteArray(JSON.parse(res.airdropSecretKey)).solana,
-                mint: getPublicKey(mint.address),
-              })
-            }
-            this.logger.log(
-              `[${res.symbol}] Configured mint ${res.name} (${res.decimals} decimals) (${res?.address}) on ${
-                res?.cluster?.name
-              } ${
-                this.airdropConfig.has(mint.id)
-                  ? `(Airdrop ${this.airdropConfig.get(mint.id).feePayer.publicKey?.toBase58()})`
-                  : ''
-              }`,
-            )
-          }),
+        this.mint.upsert({
+          where: { id: mint.id },
+          update: { ...mint },
+          create: { ...mint },
+          include: { cluster: true },
+        }),
       ),
     )
   }

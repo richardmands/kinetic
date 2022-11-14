@@ -25,7 +25,7 @@ export class ApiAirdropDataAccessService {
     const mint = appMint.mint
 
     // Make sure there is an airdrop config for this mint
-    const airdropConfig = this.data.airdropConfig.get(mint.id)
+    const airdropConfig = this.data.getAirdropConfig(mint, appEnv.cluster)
     if (!airdropConfig) {
       throw new HttpException(`Airdrop configuration not found.`, HttpStatus.BAD_REQUEST)
     }
@@ -43,7 +43,7 @@ export class ApiAirdropDataAccessService {
     }
 
     try {
-      const commitment = request.commitment || Commitment.Finalized
+      const commitment = request.commitment || Commitment.Confirmed
       const account = request.account
       const amount = request.amount ? request.amount : 1
       this.logger.verbose(`Requesting airdrop: ${account} ${amount} ${mint.symbol} (${mint.address}) on ${environment}`)

@@ -80,21 +80,19 @@ export class ApiConfigDataAccessService {
     if (!found) {
       this.logger.warn(`Not configured to set cookies for ${hostname}`)
     }
+    const isSecure = this.apiUrl.startsWith('https')
     return {
       httpOnly: true,
-      secure: true,
+      secure: isSecure,
       domain: found || this.cookieDomains[0],
-      sameSite: this.cookieDomains?.length > 1 ? 'none' : 'strict',
+      sameSite: isSecure ? 'none' : 'strict',
     }
   }
 
   get cors() {
     return {
       credentials: true,
-      origin: (origin, callback) => {
-        this.logger.verbose(`CORS request from origin ${origin}, enabled bypass: ${this.corsBypass}`)
-        return callback(null, this.corsBypass ? origin : this.corsOrigins)
-      },
+      origin: (origin, callback) => callback(null, this.corsBypass ? origin : this.corsOrigins),
     }
   }
 
@@ -210,6 +208,7 @@ export class ApiConfigDataAccessService {
   get solanaDevnetEnabled(): boolean {
     return this.config.get('solana.devnet.enabled')
   }
+
   get solanaDevnetRpcEndpoint() {
     return this.config.get('solana.devnet.rpcEndpoint')
   }
