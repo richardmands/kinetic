@@ -1,39 +1,31 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/api/account/info/{environment}/{index}/{accountId}": {
-      "get": {
-        "operationId": "getAccountInfo",
+    "/api/account/close": {
+      "post": {
+        "operationId": "closeAccount",
         "summary": "",
-        "parameters": [
-          {
-            "name": "environment",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "index",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "name": "accountId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseAccountRequest"
+              }
             }
           }
-        ],
+        },
         "responses": {
-          "200": {
-            "description": ""
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
           }
         },
         "tags": ["account"]
@@ -69,6 +61,67 @@
         "tags": ["account"]
       }
     },
+    "/api/account/info/{environment}/{index}/{accountId}/{mint}": {
+      "get": {
+        "operationId": "getAccountInfo",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "environment",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "index",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "accountId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mint",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "commitment",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Commitment"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountInfo"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["account"]
+      }
+    },
     "/api/account/balance/{environment}/{index}/{accountId}": {
       "get": {
         "operationId": "getBalance",
@@ -96,6 +149,14 @@
             "in": "path",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "commitment",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Commitment"
             }
           }
         ],
@@ -149,6 +210,14 @@
             "in": "path",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "commitment",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Commitment"
             }
           }
         ],
@@ -205,6 +274,14 @@
             "in": "path",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "commitment",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Commitment"
             }
           }
         ],
@@ -328,6 +405,62 @@
           }
         },
         "tags": ["app"]
+      }
+    },
+    "/api/transaction/kinetic-transaction/{environment}/{index}": {
+      "get": {
+        "operationId": "getKineticTransaction",
+        "summary": "",
+        "parameters": [
+          {
+            "name": "environment",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "index",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "reference",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "signature",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Transaction"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["transaction"]
       }
     },
     "/api/transaction/latest-blockhash/{environment}/{index}": {
@@ -470,6 +603,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "commitment",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Commitment"
+            }
           }
         ],
         "responses": {
@@ -491,7 +632,7 @@
   "info": {
     "title": "@kin-kinetic/api",
     "description": "The OpenAPI definition of the Kinetic API",
-    "version": "1.0.0-rc.8",
+    "version": "1.0.0-rc.18",
     "contact": {}
   },
   "tags": [
@@ -514,11 +655,14 @@
         "type": "string",
         "enum": ["Confirmed", "Finalized", "Processed"]
       },
-      "CreateAccountRequest": {
+      "CloseAccountRequest": {
         "type": "object",
         "properties": {
           "commitment": {
             "$ref": "#/components/schemas/Commitment"
+          },
+          "account": {
+            "type": "string"
           },
           "environment": {
             "type": "string"
@@ -526,25 +670,25 @@
           "index": {
             "type": "integer"
           },
-          "lastValidBlockHeight": {
-            "type": "integer"
-          },
           "mint": {
             "type": "string"
           },
-          "referenceId": {
+          "reference": {
             "type": "string",
             "nullable": true
+          },
+          "referenceId": {
+            "type": "string",
+            "nullable": true,
+            "deprecated": true
           },
           "referenceType": {
             "type": "string",
-            "nullable": true
-          },
-          "tx": {
-            "type": "string"
+            "nullable": true,
+            "deprecated": true
           }
         },
-        "required": ["commitment", "environment", "index", "lastValidBlockHeight", "mint", "tx"]
+        "required": ["commitment", "account", "environment", "index", "mint"]
       },
       "TransactionErrorType": {
         "type": "string",
@@ -600,7 +744,7 @@
             "nullable": true
           },
           "decimals": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           },
           "destination": {
@@ -631,14 +775,10 @@
             "nullable": true
           },
           "processingDuration": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           },
-          "referenceId": {
-            "type": "string",
-            "nullable": true
-          },
-          "referenceType": {
+          "reference": {
             "type": "string",
             "nullable": true
           },
@@ -652,7 +792,7 @@
             "nullable": true
           },
           "solanaCommittedDuration": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           },
           "solanaFinalized": {
@@ -661,7 +801,7 @@
             "nullable": true
           },
           "solanaFinalizedDuration": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           },
           "solanaStart": {
@@ -682,7 +822,7 @@
             "$ref": "#/components/schemas/TransactionStatus"
           },
           "totalDuration": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           },
           "tx": {
@@ -704,7 +844,7 @@
             "nullable": true
           },
           "webhookEventDuration": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           },
           "webhookVerifyStart": {
@@ -718,10 +858,109 @@
             "nullable": true
           },
           "webhookVerifyDuration": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           }
         }
+      },
+      "CreateAccountRequest": {
+        "type": "object",
+        "properties": {
+          "commitment": {
+            "$ref": "#/components/schemas/Commitment"
+          },
+          "environment": {
+            "type": "string"
+          },
+          "index": {
+            "type": "integer"
+          },
+          "lastValidBlockHeight": {
+            "type": "integer"
+          },
+          "mint": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string",
+            "nullable": true
+          },
+          "referenceId": {
+            "type": "string",
+            "nullable": true,
+            "deprecated": true
+          },
+          "referenceType": {
+            "type": "string",
+            "nullable": true,
+            "deprecated": true
+          },
+          "tx": {
+            "type": "string"
+          }
+        },
+        "required": ["commitment", "environment", "index", "lastValidBlockHeight", "mint", "tx"]
+      },
+      "TokenInfo": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "balance": {
+            "type": "string",
+            "nullable": true
+          },
+          "closeAuthority": {
+            "type": "string",
+            "nullable": true
+          },
+          "decimals": {
+            "type": "integer",
+            "default": "0"
+          },
+          "mint": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["account", "decimals", "mint"]
+      },
+      "AccountInfo": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "isMint": {
+            "type": "boolean"
+          },
+          "isOwner": {
+            "type": "boolean"
+          },
+          "isTokenAccount": {
+            "type": "boolean"
+          },
+          "owner": {
+            "type": "string",
+            "nullable": true
+          },
+          "program": {
+            "type": "string",
+            "nullable": true
+          },
+          "tokens": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            }
+          }
+        },
+        "required": ["account", "isMint", "isOwner", "isTokenAccount"]
       },
       "BalanceToken": {
         "type": "object",
@@ -767,7 +1006,7 @@
             "type": "string"
           },
           "slot": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           },
           "err": {
@@ -779,7 +1018,7 @@
             "nullable": true
           },
           "blockTime": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           }
         },
@@ -1002,7 +1241,7 @@
         "type": "object",
         "properties": {
           "lamports": {
-            "type": "float"
+            "type": "integer"
           }
         },
         "required": ["lamports"]
@@ -1025,13 +1264,19 @@
           "lastValidBlockHeight": {
             "type": "integer"
           },
-          "referenceId": {
+          "reference": {
             "type": "string",
             "nullable": true
           },
+          "referenceId": {
+            "type": "string",
+            "nullable": true,
+            "deprecated": true
+          },
           "referenceType": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "deprecated": true
           },
           "tx": {
             "type": "string"
@@ -1039,15 +1284,19 @@
         },
         "required": ["commitment", "environment", "index", "mint", "lastValidBlockHeight", "tx"]
       },
+      "ConfirmationStatus": {
+        "type": "string",
+        "enum": ["processed", "confirmed", "finalized"]
+      },
       "SignatureStatus": {
         "type": "object",
         "properties": {
           "slot": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           },
           "confirmations": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           },
           "err": {
@@ -1055,21 +1304,16 @@
             "nullable": true
           },
           "confirmationStatus": {
-            "type": "string",
-            "enum": ["processed", "confirmed", "finalized"],
-            "nullable": true
+            "nullable": true,
+            "$ref": "#/components/schemas/ConfirmationStatus"
           }
         }
-      },
-      "Message": {
-        "type": "object",
-        "properties": {}
       },
       "TransactionData": {
         "type": "object",
         "properties": {
           "message": {
-            "$ref": "#/components/schemas/Message"
+            "type": "object"
           },
           "signatures": {
             "type": "array",
@@ -1080,29 +1324,103 @@
         },
         "required": ["message", "signatures"]
       },
+      "CompiledInstruction": {
+        "type": "object",
+        "properties": {
+          "programIdIndex": {
+            "type": "integer"
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "data": {
+            "type": "string"
+          }
+        },
+        "required": ["programIdIndex", "accounts", "data"]
+      },
+      "CompiledInnerInstruction": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer"
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompiledInstruction"
+            }
+          }
+        },
+        "required": ["index", "instructions"]
+      },
+      "TokenAmount": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "string"
+          },
+          "decimals": {
+            "type": "integer"
+          },
+          "uiAmount": {
+            "type": "integer",
+            "nullable": true
+          },
+          "uiAmountString": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": ["amount", "decimals"]
+      },
+      "TokenBalance": {
+        "type": "object",
+        "properties": {
+          "accountIndex": {
+            "type": "integer"
+          },
+          "mint": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string",
+            "nullable": true
+          },
+          "uiTokenAmount": {
+            "$ref": "#/components/schemas/TokenAmount"
+          }
+        },
+        "required": ["accountIndex", "mint", "uiTokenAmount"]
+      },
       "ConfirmedTransactionMeta": {
         "type": "object",
         "properties": {
           "fee": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           },
           "innerInstructions": {
+            "nullable": true,
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/CompiledInnerInstruction"
             }
           },
           "preBalances": {
+            "nullable": true,
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "integer"
             }
           },
           "postBalances": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "integer"
             }
           },
           "logMessages": {
@@ -1116,14 +1434,14 @@
             "nullable": true,
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/TokenBalance"
             }
           },
           "postTokenBalances": {
             "nullable": true,
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/TokenBalance"
             }
           },
           "err": {
@@ -1131,13 +1449,13 @@
             "nullable": true
           }
         },
-        "required": ["innerInstructions", "preBalances", "postBalances"]
+        "required": ["postBalances"]
       },
       "TransactionResponse": {
         "type": "object",
         "properties": {
           "slot": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           },
           "transaction": {
@@ -1147,7 +1465,7 @@
             "$ref": "#/components/schemas/ConfirmedTransactionMeta"
           },
           "blockTime": {
-            "type": "number",
+            "type": "integer",
             "nullable": true
           }
         },

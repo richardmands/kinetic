@@ -1,16 +1,16 @@
-import { HDKey } from 'micro-ed25519-hdkey'
 import * as bip39 from '@scure/bip39'
 import { wordlist } from '@scure/bip39/wordlists/english'
 import { Keypair as SolanaKeypair, PublicKey as SolanaPublicKey } from '@solana/web3.js'
 import * as bs58 from 'bs58'
+import { HDKey } from 'micro-ed25519-hdkey'
 
 export { SolanaKeypair, SolanaPublicKey }
 
 export class Keypair {
   private readonly solanaKeypair: SolanaKeypair
   mnemonic?: string
-  secretKey?: string
   publicKey: string
+  secretKey?: string
 
   constructor(secretKey: string) {
     this.solanaKeypair = SolanaKeypair.fromSecretKey(bs58.decode(secretKey))
@@ -34,17 +34,11 @@ export class Keypair {
     return this.fromSecretKey(bs58.encode(Uint8Array.from(byteArray)))
   }
 
-  static fromMnemonicSeed(mnemonic: string): Keypair {
-    const seed = bip39.mnemonicToSeedSync(mnemonic, '')
-
-    return this.fromSeed(Buffer.from(seed).slice(0, 32))
-  }
-
   static fromMnemonic(mnemonic: string): Keypair {
     return this.fromMnemonicSet(mnemonic)[0]
   }
 
-  static fromMnemonicSet(mnemonic: string, from = 0, to = 10): Keypair[] {
+  static fromMnemonicSet(mnemonic: string, from = 0, to = 1): Keypair[] {
     // Always start with zero as minimum
     from = from < 0 ? 0 : from
     // Always generate at least 1
@@ -62,17 +56,30 @@ export class Keypair {
     return keys
   }
 
-  static derive(seed: Buffer, path: string): Keypair {
-    const hd = HDKey.fromMasterSeed(seed.toString('hex'))
-    return Keypair.fromSeed(Buffer.from(hd.derive(path).privateKey))
-  }
+  static fromSecret(secret: string): Keypair {
+    secret = secret.trim()
 
-  static fromSeed(seed: Buffer): Keypair {
-    return this.fromSecretKey(bs58.encode(SolanaKeypair.fromSeed(seed).secretKey))
+    let keypair: Keypair
+
+    if (this.isMnemonic(secret)) {
+      keypair = Keypair.fromMnemonic(secret)
+    } else if (this.isByteArray(secret)) {
+      keypair = this.parseByteArray(secret)
+    } else {
+      keypair = Keypair.fromSecretKey(secret)
+    }
+    if (!keypair) {
+      throw new Error('Invalid secret')
+    }
+    return keypair
   }
 
   static fromSecretKey(secretKey: string): Keypair {
     return new Keypair(secretKey)
+  }
+
+  static generateMnemonic(strength: 128 | 256 = 128): string {
+    return bip39.generateMnemonic(wordlist, strength)
   }
 
   static random(): Keypair {
@@ -81,7 +88,31 @@ export class Keypair {
     return this.fromMnemonic(mnemonic)
   }
 
-  static generateMnemonic(strength: 128 | 256 = 128): string {
-    return bip39.generateMnemonic(wordlist, strength)
+  private static derive(seed: Buffer, path: string): Keypair {
+    const hd = HDKey.fromMasterSeed(seed.toString('hex'))
+
+    return Keypair.fromSeed(Buffer.from(hd.derive(path).privateKey))
+  }
+
+  private static fromSeed(seed: Buffer): Keypair {
+    return this.fromSecretKey(bs58.encode(SolanaKeypair.fromSeed(seed).secretKey))
+  }
+
+  private static isByteArray(secret: string) {
+    return secret.startsWith('[') && secret.endsWith(']')
+  }
+
+  private static isMnemonic(secret: string) {
+    return secret.split(' ').length === 12 || secret.split(' ').length === 24
+  }
+
+  private static parseByteArray(secret: string): Keypair {
+    try {
+      const parsed: number[] = JSON.parse(secret)
+
+      return Keypair.fromByteArray(parsed)
+    } catch (e) {
+      throw new Error('Error parsing byte array')
+    }
   }
 }

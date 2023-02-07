@@ -36,6 +36,8 @@ fragment AppEnvDetails on AppEnv {
     ...AppMintDetails
   }
   name
+  solanaTransactionMaxRetries
+  solanaTransactionSkipPreflight
   uasAllowed
   uasBlocked
   webhookBalanceEnabled
@@ -92,8 +94,7 @@ fragment TransactionDetails on Transaction {
   ip
   mint
   processingDuration
-  referenceId
-  referenceType
+  reference
   signature
   solanaCommittedDuration
   solanaFinalized

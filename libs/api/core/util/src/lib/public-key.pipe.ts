@@ -1,6 +1,5 @@
+import { HttpException, HttpStatus, Injectable, PipeTransform } from '@nestjs/common'
 import { PublicKey } from '@solana/web3.js'
-
-import { PipeTransform, Injectable, HttpException, HttpStatus } from '@nestjs/common'
 
 @Injectable()
 export class PublicKeyPipe implements PipeTransform {
@@ -10,7 +9,7 @@ export class PublicKeyPipe implements PipeTransform {
     try {
       new PublicKey(value)
     } catch (error) {
-      throw new HttpException(`Error: ${this.field} must be a valid PublicKey`, HttpStatus.BAD_REQUEST)
+      throw new HttpException(`${this.field} must be a valid PublicKey`, HttpStatus.BAD_REQUEST)
     }
 
     return value

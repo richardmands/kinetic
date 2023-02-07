@@ -1,11 +1,12 @@
-import { ApiWebhookDataAccessService } from '@kin-kinetic/api/webhook/data-access'
+import { getAppKey } from '@kin-kinetic/api/core/util'
+import { ApiWebhookService } from '@kin-kinetic/api/webhook/data-access'
 import { Controller, Param, ParseIntPipe, Post, Req, Res } from '@nestjs/common'
 import { ApiExcludeEndpoint } from '@nestjs/swagger'
 import { Request, Response } from 'express'
 
 @Controller('app')
 export class ApiWebhookFeatureController {
-  constructor(private readonly service: ApiWebhookDataAccessService) {}
+  constructor(private readonly service: ApiWebhookService) {}
 
   @Post('/:environment/:index/webhook/:type')
   @ApiExcludeEndpoint()
@@ -16,6 +17,6 @@ export class ApiWebhookFeatureController {
     @Param('index', ParseIntPipe) index: number,
     @Param('type') type: string,
   ) {
-    return this.service.storeIncomingWebhook(environment, index, type, req.headers, req.body, res)
+    return this.service.storeIncomingWebhook(getAppKey(environment, index), type, req.headers, req.body, res)
   }
 }

@@ -14,12 +14,14 @@ export type Scalars = {
   Boolean: boolean
   Int: number
   Float: number
-  BigInt: any
+  /** A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format. */
   DateTime: any
+  /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
   JSON: any
 }
 
 export type AdminAppCreateInput = {
+  enableWebhooks?: InputMaybe<Scalars['Boolean']>
   index: Scalars['Int']
   logoUrl?: InputMaybe<Scalars['String']>
   name: Scalars['String']
@@ -57,6 +59,13 @@ export type AdminMintCreateInput = {
   logoUrl?: InputMaybe<Scalars['String']>
   name: Scalars['String']
   symbol: Scalars['String']
+}
+
+export type AdminQueueLoadInput = {
+  environment: Scalars['String']
+  index: Scalars['Int']
+  payload: Scalars['JSON']
+  type: QueueType
 }
 
 export type AdminUserCreateInput = {
@@ -101,6 +110,8 @@ export type AppEnv = {
   key?: Maybe<Scalars['String']>
   mints?: Maybe<Array<AppMint>>
   name?: Maybe<Scalars['String']>
+  solanaTransactionMaxRetries?: Maybe<Scalars['Int']>
+  solanaTransactionSkipPreflight?: Maybe<Scalars['Boolean']>
   uasAllowed?: Maybe<Array<Scalars['String']>>
   uasBlocked?: Maybe<Array<Scalars['String']>>
   updatedAt: Scalars['DateTime']
@@ -167,6 +178,7 @@ export type Cluster = {
   createdAt?: Maybe<Scalars['DateTime']>
   endpointPrivate?: Maybe<Scalars['String']>
   endpointPublic?: Maybe<Scalars['String']>
+  envs?: Maybe<Array<AppEnv>>
   explorer?: Maybe<Scalars['String']>
   id?: Maybe<Scalars['String']>
   mints?: Maybe<Array<Mint>>
@@ -186,6 +198,43 @@ export enum ClusterType {
   SolanaDevnet = 'SolanaDevnet',
   SolanaMainnet = 'SolanaMainnet',
   SolanaTestnet = 'SolanaTestnet',
+}
+
+export type Job = {
+  __typename?: 'Job'
+  attemptsMade?: Maybe<Scalars['Int']>
+  data?: Maybe<Scalars['JSON']>
+  failedReason?: Maybe<Scalars['String']>
+  finishedOn?: Maybe<Scalars['Int']>
+  id?: Maybe<Scalars['String']>
+  name?: Maybe<Scalars['String']>
+  opts?: Maybe<Scalars['JSON']>
+  processedOn?: Maybe<Scalars['Int']>
+  returnvalue?: Maybe<Scalars['JSON']>
+  stacktrace?: Maybe<Array<Scalars['String']>>
+  timestamp?: Maybe<Scalars['Int']>
+}
+
+export enum JobStatus {
+  Active = 'active',
+  Completed = 'completed',
+  Delayed = 'delayed',
+  Failed = 'failed',
+  Paused = 'paused',
+  Waiting = 'waiting',
+}
+
+export type Migration = {
+  __typename?: 'Migration'
+  key: Scalars['String']
+  status: MigrationStatus
+  version: Scalars['String']
+}
+
+export type MigrationStatus = {
+  __typename?: 'MigrationStatus'
+  count: Scalars['Int']
+  done: Scalars['Boolean']
 }
 
 export type Mint = {
@@ -221,9 +270,17 @@ export type Mutation = {
   adminDeleteApp?: Maybe<App>
   adminDeleteAppEnv?: Maybe<AppEnv>
   adminDeleteCluster?: Maybe<Cluster>
+  adminDeleteMint?: Maybe<Mint>
   adminDeleteUser?: Maybe<User>
   adminDeleteWallet?: Maybe<Wallet>
+  adminMigrate?: Maybe<MigrationStatus>
   adminMintCreate?: Maybe<Cluster>
+  adminMintImportWallet?: Maybe<Mint>
+  adminQueueClean?: Maybe<Scalars['Boolean']>
+  adminQueueDeleteJob?: Maybe<Scalars['Boolean']>
+  adminQueueLoad?: Maybe<Queue>
+  adminQueuePause?: Maybe<Scalars['Boolean']>
+  adminQueueResume?: Maybe<Scalars['Boolean']>
   adminUpdateApp?: Maybe<App>
   adminUpdateCluster?: Maybe<Cluster>
   adminUpdateUser?: Maybe<User>
@@ -236,6 +293,7 @@ export type Mutation = {
   userAppEnvMintDisable?: Maybe<AppEnv>
   userAppEnvMintEnable?: Maybe<AppEnv>
   userAppEnvMintSetWallet?: Maybe<AppEnv>
+  userAppEnvPurgeTransactions?: Maybe<AppEnv>
   userAppEnvRemoveAllowedIp?: Maybe<AppEnv>
   userAppEnvRemoveAllowedUa?: Maybe<AppEnv>
   userAppEnvRemoveBlockedIp?: Maybe<AppEnv>
@@ -280,6 +338,10 @@ export type MutationAdminDeleteClusterArgs = {
   clusterId: Scalars['String']
 }
 
+export type MutationAdminDeleteMintArgs = {
+  mintId: Scalars['String']
+}
+
 export type MutationAdminDeleteUserArgs = {
   userId: Scalars['String']
 }
@@ -288,8 +350,39 @@ export type MutationAdminDeleteWalletArgs = {
   walletId: Scalars['String']
 }
 
+export type MutationAdminMigrateArgs = {
+  key: Scalars['String']
+}
+
 export type MutationAdminMintCreateArgs = {
   input: AdminMintCreateInput
+}
+
+export type MutationAdminMintImportWalletArgs = {
+  mintId: Scalars['String']
+  secret: Scalars['String']
+}
+
+export type MutationAdminQueueCleanArgs = {
+  status?: InputMaybe<JobStatus>
+  type: QueueType
+}
+
+export type MutationAdminQueueDeleteJobArgs = {
+  jobId: Scalars['String']
+  type: QueueType
+}
+
+export type MutationAdminQueueLoadArgs = {
+  input: AdminQueueLoadInput
+}
+
+export type MutationAdminQueuePauseArgs = {
+  type: QueueType
+}
+
+export type MutationAdminQueueResumeArgs = {
+  type: QueueType
 }
 
 export type MutationAdminUpdateAppArgs = {
@@ -348,6 +441,11 @@ export type MutationUserAppEnvMintSetWalletArgs = {
   appId: Scalars['String']
   mintId: Scalars['String']
   walletId: Scalars['String']
+}
+
+export type MutationUserAppEnvPurgeTransactionsArgs = {
+  appEnvId: Scalars['String']
+  status?: InputMaybe<TransactionStatus>
 }
 
 export type MutationUserAppEnvRemoveAllowedIpArgs = {
@@ -419,7 +517,7 @@ export type MutationUserGenerateWalletArgs = {
 
 export type MutationUserImportWalletArgs = {
   appEnvId: Scalars['String']
-  secretKey: Scalars['String']
+  secret: Scalars['String']
 }
 
 export type MutationUserUpdateAppArgs = {
@@ -445,10 +543,13 @@ export type Query = {
   adminApps?: Maybe<Array<App>>
   adminCluster?: Maybe<Cluster>
   adminClusters?: Maybe<Array<Cluster>>
+  adminMigrations?: Maybe<Array<Migration>>
+  adminQueue?: Maybe<Queue>
+  adminQueueJobs?: Maybe<Array<Job>>
+  adminQueues?: Maybe<Array<Queue>>
   adminUser?: Maybe<User>
   adminUsers?: Maybe<Array<User>>
   adminWallet?: Maybe<Wallet>
-  adminWalletBalances?: Maybe<Array<WalletBalance>>
   adminWallets?: Maybe<Array<Wallet>>
   me?: Maybe<User>
   uptime: Scalars['Float']
@@ -465,8 +566,7 @@ export type Query = {
   userTransactions?: Maybe<Array<Transaction>>
   userWallet?: Maybe<Wallet>
   userWalletAirdrop?: Maybe<WalletAirdropResponse>
-  userWalletBalance?: Maybe<WalletBalance>
-  userWalletBalances?: Maybe<Array<WalletBalance>>
+  userWalletBalance?: Maybe<Scalars['String']>
   userWallets?: Maybe<Array<Wallet>>
   webConfig: WebConfig
 }
@@ -479,16 +579,20 @@ export type QueryAdminClusterArgs = {
   clusterId: Scalars['String']
 }
 
+export type QueryAdminQueueArgs = {
+  type: QueueType
+}
+
+export type QueryAdminQueueJobsArgs = {
+  statuses: Array<JobStatus>
+  type: QueueType
+}
+
 export type QueryAdminUserArgs = {
   userId: Scalars['String']
 }
 
 export type QueryAdminWalletArgs = {
-  walletId: Scalars['String']
-}
-
-export type QueryAdminWalletBalancesArgs = {
-  appEnvId: Scalars['String']
   walletId: Scalars['String']
 }
 
@@ -551,13 +655,31 @@ export type QueryUserWalletBalanceArgs = {
   walletId: Scalars['String']
 }
 
-export type QueryUserWalletBalancesArgs = {
-  appEnvId: Scalars['String']
-  walletId: Scalars['String']
-}
-
 export type QueryUserWalletsArgs = {
   appEnvId: Scalars['String']
+}
+
+export type Queue = {
+  __typename?: 'Queue'
+  count?: Maybe<QueueCount>
+  info?: Maybe<Scalars['JSON']>
+  isPaused?: Maybe<Scalars['Boolean']>
+  name: Scalars['String']
+  type: QueueType
+}
+
+export type QueueCount = {
+  __typename?: 'QueueCount'
+  active?: Maybe<Scalars['Int']>
+  completed?: Maybe<Scalars['Int']>
+  delayed?: Maybe<Scalars['Int']>
+  failed?: Maybe<Scalars['Int']>
+  paused?: Maybe<Scalars['Int']>
+  waiting?: Maybe<Scalars['Int']>
+}
+
+export enum QueueType {
+  CloseAccount = 'CloseAccount',
 }
 
 export type Transaction = {
@@ -573,8 +695,7 @@ export type Transaction = {
   ip?: Maybe<Scalars['String']>
   mint?: Maybe<Scalars['String']>
   processingDuration?: Maybe<Scalars['Int']>
-  referenceId?: Maybe<Scalars['String']>
-  referenceType?: Maybe<Scalars['String']>
+  reference?: Maybe<Scalars['String']>
   signature?: Maybe<Scalars['String']>
   solanaCommitted?: Maybe<Scalars['DateTime']>
   solanaCommittedDuration?: Maybe<Scalars['Int']>
@@ -654,6 +775,8 @@ export type UserAppEnvCreateInput = {
 }
 
 export type UserAppEnvUpdateInput = {
+  solanaTransactionMaxRetries?: InputMaybe<Scalars['Int']>
+  solanaTransactionSkipPreflight?: InputMaybe<Scalars['Boolean']>
   webhookBalanceEnabled?: InputMaybe<Scalars['Boolean']>
   webhookBalanceThreshold?: InputMaybe<Scalars['String']>
   webhookBalanceUrl?: InputMaybe<Scalars['String']>
@@ -731,8 +854,7 @@ export type UserTransactionListInput = {
   ip?: InputMaybe<Scalars['String']>
   limit?: InputMaybe<Scalars['Float']>
   page?: InputMaybe<Scalars['Float']>
-  referenceId?: InputMaybe<Scalars['String']>
-  referenceType?: InputMaybe<Scalars['String']>
+  reference?: InputMaybe<Scalars['String']>
   signature?: InputMaybe<Scalars['String']>
   source?: InputMaybe<Scalars['String']>
   status?: InputMaybe<Array<TransactionStatus>>
@@ -743,7 +865,6 @@ export type Wallet = {
   __typename?: 'Wallet'
   appEnvs?: Maybe<Array<AppEnv>>
   appMints?: Maybe<Array<AppMint>>
-  balances?: Maybe<Array<WalletBalance>>
   createdAt?: Maybe<Scalars['DateTime']>
   id: Scalars['String']
   owner?: Maybe<User>
@@ -755,16 +876,6 @@ export type Wallet = {
 export type WalletAirdropResponse = {
   __typename?: 'WalletAirdropResponse'
   signature?: Maybe<Scalars['String']>
-}
-
-export type WalletBalance = {
-  __typename?: 'WalletBalance'
-  appEnv?: Maybe<AppEnv>
-  balance?: Maybe<Scalars['BigInt']>
-  change?: Maybe<Scalars['BigInt']>
-  createdAt?: Maybe<Scalars['DateTime']>
-  id?: Maybe<Scalars['String']>
-  updatedAt?: Maybe<Scalars['DateTime']>
 }
 
 export enum WalletType {
@@ -833,6 +944,8 @@ export type AdminCreateAppMutation = {
       ipsAllowed?: Array<string> | null
       ipsBlocked?: Array<string> | null
       name?: string | null
+      solanaTransactionMaxRetries?: number | null
+      solanaTransactionSkipPreflight?: boolean | null
       uasAllowed?: Array<string> | null
       uasBlocked?: Array<string> | null
       webhookBalanceEnabled?: boolean | null
@@ -991,6 +1104,8 @@ export type AdminUpdateAppMutation = {
       ipsAllowed?: Array<string> | null
       ipsBlocked?: Array<string> | null
       name?: string | null
+      solanaTransactionMaxRetries?: number | null
+      solanaTransactionSkipPreflight?: boolean | null
       uasAllowed?: Array<string> | null
       uasBlocked?: Array<string> | null
       webhookBalanceEnabled?: boolean | null
@@ -1158,6 +1273,8 @@ export type AdminDeleteAppEnvMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -1274,6 +1391,8 @@ export type AdminAppsQuery = {
       ipsAllowed?: Array<string> | null
       ipsBlocked?: Array<string> | null
       name?: string | null
+      solanaTransactionMaxRetries?: number | null
+      solanaTransactionSkipPreflight?: boolean | null
       uasAllowed?: Array<string> | null
       uasBlocked?: Array<string> | null
       webhookBalanceEnabled?: boolean | null
@@ -1393,6 +1512,8 @@ export type AdminAppQuery = {
       ipsAllowed?: Array<string> | null
       ipsBlocked?: Array<string> | null
       name?: string | null
+      solanaTransactionMaxRetries?: number | null
+      solanaTransactionSkipPreflight?: boolean | null
       uasAllowed?: Array<string> | null
       uasBlocked?: Array<string> | null
       webhookBalanceEnabled?: boolean | null
@@ -1546,6 +1667,8 @@ export type AppEnvDetailsFragment = {
   ipsAllowed?: Array<string> | null
   ipsBlocked?: Array<string> | null
   name?: string | null
+  solanaTransactionMaxRetries?: number | null
+  solanaTransactionSkipPreflight?: boolean | null
   uasAllowed?: Array<string> | null
   uasBlocked?: Array<string> | null
   webhookBalanceEnabled?: boolean | null
@@ -1707,8 +1830,7 @@ export type TransactionDetailsFragment = {
   ip?: string | null
   mint?: string | null
   processingDuration?: number | null
-  referenceId?: string | null
-  referenceType?: string | null
+  reference?: string | null
   signature?: string | null
   solanaCommittedDuration?: number | null
   solanaFinalized?: any | null
@@ -1890,6 +2012,8 @@ export type UserUpdateAppMutation = {
       ipsAllowed?: Array<string> | null
       ipsBlocked?: Array<string> | null
       name?: string | null
+      solanaTransactionMaxRetries?: number | null
+      solanaTransactionSkipPreflight?: boolean | null
       uasAllowed?: Array<string> | null
       uasBlocked?: Array<string> | null
       webhookBalanceEnabled?: boolean | null
@@ -2038,6 +2162,8 @@ export type UserCreateAppEnvMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -2155,6 +2281,8 @@ export type UserUpdateAppEnvMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -2470,6 +2598,8 @@ export type UserAppEnvAddAllowedIpMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -2578,6 +2708,8 @@ export type UserAppEnvRemoveAllowedIpMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -2686,6 +2818,8 @@ export type UserAppEnvAddBlockedIpMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -2794,6 +2928,8 @@ export type UserAppEnvRemoveBlockedIpMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -2902,6 +3038,8 @@ export type UserAppEnvAddAllowedUaMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -3010,6 +3148,8 @@ export type UserAppEnvRemoveAllowedUaMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -3118,6 +3258,8 @@ export type UserAppEnvAddBlockedUaMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -3226,6 +3368,118 @@ export type UserAppEnvRemoveBlockedUaMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
+    uasAllowed?: Array<string> | null
+    uasBlocked?: Array<string> | null
+    webhookBalanceEnabled?: boolean | null
+    webhookBalanceUrl?: string | null
+    webhookBalanceThreshold?: string | null
+    webhookDebugging?: boolean | null
+    webhookEventEnabled?: boolean | null
+    webhookEventUrl?: string | null
+    webhookSecret?: string | null
+    webhookVerifyEnabled?: boolean | null
+    webhookVerifyUrl?: string | null
+    app?: {
+      __typename?: 'App'
+      id: string
+      createdAt: any
+      updatedAt: any
+      index: number
+      maxEnvs: number
+      name?: string | null
+    } | null
+    cluster?: {
+      __typename?: 'Cluster'
+      id?: string | null
+      createdAt?: any | null
+      updatedAt?: any | null
+      endpointPrivate?: string | null
+      endpointPublic?: string | null
+      explorer?: string | null
+      name?: string | null
+      status?: ClusterStatus | null
+      type?: ClusterType | null
+      mints?: Array<{
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      }> | null
+    } | null
+    mints?: Array<{
+      __typename?: 'AppMint'
+      id: string
+      createdAt: any
+      updatedAt: any
+      addMemo?: boolean | null
+      order?: number | null
+      mint?: {
+        __typename?: 'Mint'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        addMemo?: boolean | null
+        address?: string | null
+        airdropAmount?: number | null
+        airdropMax?: number | null
+        airdropPublicKey?: string | null
+        coinGeckoId?: string | null
+        decimals?: number | null
+        default?: boolean | null
+        enabled?: boolean | null
+        logoUrl?: string | null
+        name?: string | null
+        order?: number | null
+        symbol?: string | null
+        type?: MintType | null
+      } | null
+      wallet?: {
+        __typename?: 'Wallet'
+        id: string
+        createdAt?: any | null
+        updatedAt?: any | null
+        publicKey?: string | null
+        type?: WalletType | null
+      } | null
+    }> | null
+  } | null
+}
+
+export type UserAppEnvPurgeTransactionsMutationVariables = Exact<{
+  appEnvId: Scalars['String']
+  status?: InputMaybe<TransactionStatus>
+}>
+
+export type UserAppEnvPurgeTransactionsMutation = {
+  __typename?: 'Mutation'
+  item?: {
+    __typename?: 'AppEnv'
+    id: string
+    createdAt: any
+    updatedAt: any
+    endpoint?: string | null
+    key?: string | null
+    ipsAllowed?: Array<string> | null
+    ipsBlocked?: Array<string> | null
+    name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -3335,6 +3589,8 @@ export type UserAppEnvMintDisableMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -3444,6 +3700,8 @@ export type UserAppEnvMintEnableMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -3554,6 +3812,8 @@ export type UserAppEnvMintSetWalletMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -3663,6 +3923,8 @@ export type UserAppEnvWalletAddMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -3780,6 +4042,8 @@ export type UserAppEnvWalletRemoveMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -3896,6 +4160,8 @@ export type UserDeleteAppEnvMutation = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -4008,8 +4274,7 @@ export type UserTransactionQuery = {
     ip?: string | null
     mint?: string | null
     processingDuration?: number | null
-    referenceId?: string | null
-    referenceType?: string | null
+    reference?: string | null
     signature?: string | null
     solanaCommittedDuration?: number | null
     solanaFinalized?: any | null
@@ -4112,8 +4377,7 @@ export type UserTransactionsQuery = {
     ip?: string | null
     mint?: string | null
     processingDuration?: number | null
-    referenceId?: string | null
-    referenceType?: string | null
+    reference?: string | null
     signature?: string | null
     solanaCommittedDuration?: number | null
     solanaFinalized?: any | null
@@ -4227,6 +4491,8 @@ export type UserAppsQuery = {
       ipsAllowed?: Array<string> | null
       ipsBlocked?: Array<string> | null
       name?: string | null
+      solanaTransactionMaxRetries?: number | null
+      solanaTransactionSkipPreflight?: boolean | null
       uasAllowed?: Array<string> | null
       uasBlocked?: Array<string> | null
       webhookBalanceEnabled?: boolean | null
@@ -4347,6 +4613,8 @@ export type UserAppQuery = {
       ipsAllowed?: Array<string> | null
       ipsBlocked?: Array<string> | null
       name?: string | null
+      solanaTransactionMaxRetries?: number | null
+      solanaTransactionSkipPreflight?: boolean | null
       uasAllowed?: Array<string> | null
       uasBlocked?: Array<string> | null
       webhookBalanceEnabled?: boolean | null
@@ -4494,6 +4762,8 @@ export type UserAppEnvQuery = {
     ipsAllowed?: Array<string> | null
     ipsBlocked?: Array<string> | null
     name?: string | null
+    solanaTransactionMaxRetries?: number | null
+    solanaTransactionSkipPreflight?: boolean | null
     uasAllowed?: Array<string> | null
     uasBlocked?: Array<string> | null
     webhookBalanceEnabled?: boolean | null
@@ -4727,6 +4997,63 @@ export type AdminMintCreateMutation = {
   } | null
 }
 
+export type AdminDeleteMintMutationVariables = Exact<{
+  mintId: Scalars['String']
+}>
+
+export type AdminDeleteMintMutation = {
+  __typename?: 'Mutation'
+  deleted?: {
+    __typename?: 'Mint'
+    id?: string | null
+    createdAt?: any | null
+    updatedAt?: any | null
+    addMemo?: boolean | null
+    address?: string | null
+    airdropAmount?: number | null
+    airdropMax?: number | null
+    airdropPublicKey?: string | null
+    coinGeckoId?: string | null
+    decimals?: number | null
+    default?: boolean | null
+    enabled?: boolean | null
+    logoUrl?: string | null
+    name?: string | null
+    order?: number | null
+    symbol?: string | null
+    type?: MintType | null
+  } | null
+}
+
+export type AdminMintImportWalletMutationVariables = Exact<{
+  mintId: Scalars['String']
+  secret: Scalars['String']
+}>
+
+export type AdminMintImportWalletMutation = {
+  __typename?: 'Mutation'
+  adminMintImportWallet?: {
+    __typename?: 'Mint'
+    id?: string | null
+    createdAt?: any | null
+    updatedAt?: any | null
+    addMemo?: boolean | null
+    address?: string | null
+    airdropAmount?: number | null
+    airdropMax?: number | null
+    airdropPublicKey?: string | null
+    coinGeckoId?: string | null
+    decimals?: number | null
+    default?: boolean | null
+    enabled?: boolean | null
+    logoUrl?: string | null
+    name?: string | null
+    order?: number | null
+    symbol?: string | null
+    type?: MintType | null
+  } | null
+}
+
 export type AdminCreateClusterMutationVariables = Exact<{
   input: AdminClusterCreateInput
 }>
@@ -4843,6 +5170,107 @@ export type AdminClustersQuery = {
     name?: string | null
     status?: ClusterStatus | null
     type?: ClusterType | null
+    envs?: Array<{
+      __typename?: 'AppEnv'
+      id: string
+      createdAt: any
+      updatedAt: any
+      endpoint?: string | null
+      key?: string | null
+      ipsAllowed?: Array<string> | null
+      ipsBlocked?: Array<string> | null
+      name?: string | null
+      solanaTransactionMaxRetries?: number | null
+      solanaTransactionSkipPreflight?: boolean | null
+      uasAllowed?: Array<string> | null
+      uasBlocked?: Array<string> | null
+      webhookBalanceEnabled?: boolean | null
+      webhookBalanceUrl?: string | null
+      webhookBalanceThreshold?: string | null
+      webhookDebugging?: boolean | null
+      webhookEventEnabled?: boolean | null
+      webhookEventUrl?: string | null
+      webhookSecret?: string | null
+      webhookVerifyEnabled?: boolean | null
+      webhookVerifyUrl?: string | null
+      app?: {
+        __typename?: 'App'
+        id: string
+        createdAt: any
+        updatedAt: any
+        index: number
+        maxEnvs: number
+        name?: string | null
+      } | null
+      cluster?: {
+        __typename?: 'Cluster'
+        id?: string | null
+        createdAt?: any | null
+        updatedAt?: any | null
+        endpointPrivate?: string | null
+        endpointPublic?: string | null
+        explorer?: string | null
+        name?: string | null
+        status?: ClusterStatus | null
+        type?: ClusterType | null
+        mints?: Array<{
+          __typename?: 'Mint'
+          id?: string | null
+          createdAt?: any | null
+          updatedAt?: any | null
+          addMemo?: boolean | null
+          address?: string | null
+          airdropAmount?: number | null
+          airdropMax?: number | null
+          airdropPublicKey?: string | null
+          coinGeckoId?: string | null
+          decimals?: number | null
+          default?: boolean | null
+          enabled?: boolean | null
+          logoUrl?: string | null
+          name?: string | null
+          order?: number | null
+          symbol?: string | null
+          type?: MintType | null
+        }> | null
+      } | null
+      mints?: Array<{
+        __typename?: 'AppMint'
+        id: string
+        createdAt: any
+        updatedAt: any
+        addMemo?: boolean | null
+        order?: number | null
+        mint?: {
+          __typename?: 'Mint'
+          id?: string | null
+          createdAt?: any | null
+          updatedAt?: any | null
+          addMemo?: boolean | null
+          address?: string | null
+          airdropAmount?: number | null
+          airdropMax?: number | null
+          airdropPublicKey?: string | null
+          coinGeckoId?: string | null
+          decimals?: number | null
+          default?: boolean | null
+          enabled?: boolean | null
+          logoUrl?: string | null
+          name?: string | null
+          order?: number | null
+          symbol?: string | null
+          type?: MintType | null
+        } | null
+        wallet?: {
+          __typename?: 'Wallet'
+          id: string
+          createdAt?: any | null
+          updatedAt?: any | null
+          publicKey?: string | null
+          type?: WalletType | null
+        } | null
+      }> | null
+    }> | null
     mints?: Array<{
       __typename?: 'Mint'
       id?: string | null
@@ -4944,6 +5372,15 @@ export type UserClustersQuery = {
   }> | null
 }
 
+export type MigrationDetailsFragment = {
+  __typename?: 'Migration'
+  key: string
+  version: string
+  status: { __typename?: 'MigrationStatus'; count: number; done: boolean }
+}
+
+export type MigrationStatusDetailsFragment = { __typename?: 'MigrationStatus'; count: number; done: boolean }
+
 export type WebConfigQueryVariables = Exact<{ [key: string]: never }>
 
 export type WebConfigQuery = {
@@ -4960,6 +5397,188 @@ export type WebConfigQuery = {
 export type UptimeQueryVariables = Exact<{ [key: string]: never }>
 
 export type UptimeQuery = { __typename?: 'Query'; uptime: number }
+
+export type AdminMigrationsQueryVariables = Exact<{ [key: string]: never }>
+
+export type AdminMigrationsQuery = {
+  __typename?: 'Query'
+  items?: Array<{
+    __typename?: 'Migration'
+    key: string
+    version: string
+    status: { __typename?: 'MigrationStatus'; count: number; done: boolean }
+  }> | null
+}
+
+export type AdminMigrateMutationVariables = Exact<{
+  key: Scalars['String']
+}>
+
+export type AdminMigrateMutation = {
+  __typename?: 'Mutation'
+  item?: { __typename?: 'MigrationStatus'; count: number; done: boolean } | null
+}
+
+export type QueueDetailsFragment = {
+  __typename?: 'Queue'
+  type: QueueType
+  name: string
+  info?: any | null
+  isPaused?: boolean | null
+  count?: {
+    __typename?: 'QueueCount'
+    active?: number | null
+    completed?: number | null
+    delayed?: number | null
+    failed?: number | null
+    paused?: number | null
+    waiting?: number | null
+  } | null
+}
+
+export type QueueCountDetailsFragment = {
+  __typename?: 'QueueCount'
+  active?: number | null
+  completed?: number | null
+  delayed?: number | null
+  failed?: number | null
+  paused?: number | null
+  waiting?: number | null
+}
+
+export type JobDetailsFragment = {
+  __typename?: 'Job'
+  id?: string | null
+  data?: any | null
+  opts?: any | null
+  attemptsMade?: number | null
+  processedOn?: number | null
+  finishedOn?: number | null
+  timestamp?: number | null
+  name?: string | null
+  stacktrace?: Array<string> | null
+  returnvalue?: any | null
+  failedReason?: string | null
+}
+
+export type AdminQueuesQueryVariables = Exact<{ [key: string]: never }>
+
+export type AdminQueuesQuery = {
+  __typename?: 'Query'
+  items?: Array<{
+    __typename?: 'Queue'
+    type: QueueType
+    name: string
+    info?: any | null
+    isPaused?: boolean | null
+    count?: {
+      __typename?: 'QueueCount'
+      active?: number | null
+      completed?: number | null
+      delayed?: number | null
+      failed?: number | null
+      paused?: number | null
+      waiting?: number | null
+    } | null
+  }> | null
+}
+
+export type AdminQueueQueryVariables = Exact<{
+  type: QueueType
+}>
+
+export type AdminQueueQuery = {
+  __typename?: 'Query'
+  item?: {
+    __typename?: 'Queue'
+    type: QueueType
+    name: string
+    info?: any | null
+    isPaused?: boolean | null
+    count?: {
+      __typename?: 'QueueCount'
+      active?: number | null
+      completed?: number | null
+      delayed?: number | null
+      failed?: number | null
+      paused?: number | null
+      waiting?: number | null
+    } | null
+  } | null
+}
+
+export type AdminQueueJobsQueryVariables = Exact<{
+  type: QueueType
+  statuses: Array<JobStatus> | JobStatus
+}>
+
+export type AdminQueueJobsQuery = {
+  __typename?: 'Query'
+  items?: Array<{
+    __typename?: 'Job'
+    id?: string | null
+    data?: any | null
+    opts?: any | null
+    attemptsMade?: number | null
+    processedOn?: number | null
+    finishedOn?: number | null
+    timestamp?: number | null
+    name?: string | null
+    stacktrace?: Array<string> | null
+    returnvalue?: any | null
+    failedReason?: string | null
+  }> | null
+}
+
+export type AdminQueueLoadMutationVariables = Exact<{
+  input: AdminQueueLoadInput
+}>
+
+export type AdminQueueLoadMutation = {
+  __typename?: 'Mutation'
+  loaded?: {
+    __typename?: 'Queue'
+    type: QueueType
+    name: string
+    info?: any | null
+    isPaused?: boolean | null
+    count?: {
+      __typename?: 'QueueCount'
+      active?: number | null
+      completed?: number | null
+      delayed?: number | null
+      failed?: number | null
+      paused?: number | null
+      waiting?: number | null
+    } | null
+  } | null
+}
+
+export type AdminQueueCleanMutationVariables = Exact<{
+  type: QueueType
+  status?: InputMaybe<JobStatus>
+}>
+
+export type AdminQueueCleanMutation = { __typename?: 'Mutation'; paused?: boolean | null }
+
+export type AdminQueueDeleteJobMutationVariables = Exact<{
+  type: QueueType
+  jobId: Scalars['String']
+}>
+
+export type AdminQueueDeleteJobMutation = { __typename?: 'Mutation'; paused?: boolean | null }
+
+export type AdminQueuePauseMutationVariables = Exact<{
+  type: QueueType
+}>
+
+export type AdminQueuePauseMutation = { __typename?: 'Mutation'; paused?: boolean | null }
+
+export type AdminQueueResumeMutationVariables = Exact<{
+  type: QueueType
+}>
+
+export type AdminQueueResumeMutation = { __typename?: 'Mutation'; resumed?: boolean | null }
 
 export type UserDetailsFragment = {
   __typename?: 'User'
@@ -5136,15 +5755,6 @@ export type WalletDetailsFragment = {
 
 export type WalletAirdropResponseDetailsFragment = { __typename?: 'WalletAirdropResponse'; signature?: string | null }
 
-export type WalletBalanceDetailsFragment = {
-  __typename?: 'WalletBalance'
-  id?: string | null
-  createdAt?: any | null
-  updatedAt?: any | null
-  balance?: any | null
-  change?: any | null
-}
-
 export type AdminDeleteWalletMutationVariables = Exact<{
   walletId: Scalars['String']
 }>
@@ -5184,6 +5794,8 @@ export type AdminWalletQuery = {
       ipsAllowed?: Array<string> | null
       ipsBlocked?: Array<string> | null
       name?: string | null
+      solanaTransactionMaxRetries?: number | null
+      solanaTransactionSkipPreflight?: boolean | null
       uasAllowed?: Array<string> | null
       uasBlocked?: Array<string> | null
       webhookBalanceEnabled?: boolean | null
@@ -5287,23 +5899,6 @@ export type AdminWalletQuery = {
   } | null
 }
 
-export type AdminWalletBalancesQueryVariables = Exact<{
-  appEnvId: Scalars['String']
-  walletId: Scalars['String']
-}>
-
-export type AdminWalletBalancesQuery = {
-  __typename?: 'Query'
-  balances?: Array<{
-    __typename?: 'WalletBalance'
-    id?: string | null
-    createdAt?: any | null
-    updatedAt?: any | null
-    balance?: any | null
-    change?: any | null
-  }> | null
-}
-
 export type AdminWalletsQueryVariables = Exact<{ [key: string]: never }>
 
 export type AdminWalletsQuery = {
@@ -5315,113 +5910,6 @@ export type AdminWalletsQuery = {
     updatedAt?: any | null
     publicKey?: string | null
     type?: WalletType | null
-    balances?: Array<{
-      __typename?: 'WalletBalance'
-      id?: string | null
-      createdAt?: any | null
-      updatedAt?: any | null
-      balance?: any | null
-      change?: any | null
-      appEnv?: {
-        __typename?: 'AppEnv'
-        id: string
-        createdAt: any
-        updatedAt: any
-        endpoint?: string | null
-        key?: string | null
-        ipsAllowed?: Array<string> | null
-        ipsBlocked?: Array<string> | null
-        name?: string | null
-        uasAllowed?: Array<string> | null
-        uasBlocked?: Array<string> | null
-        webhookBalanceEnabled?: boolean | null
-        webhookBalanceUrl?: string | null
-        webhookBalanceThreshold?: string | null
-        webhookDebugging?: boolean | null
-        webhookEventEnabled?: boolean | null
-        webhookEventUrl?: string | null
-        webhookSecret?: string | null
-        webhookVerifyEnabled?: boolean | null
-        webhookVerifyUrl?: string | null
-        app?: {
-          __typename?: 'App'
-          id: string
-          createdAt: any
-          updatedAt: any
-          index: number
-          maxEnvs: number
-          name?: string | null
-        } | null
-        cluster?: {
-          __typename?: 'Cluster'
-          id?: string | null
-          createdAt?: any | null
-          updatedAt?: any | null
-          endpointPrivate?: string | null
-          endpointPublic?: string | null
-          explorer?: string | null
-          name?: string | null
-          status?: ClusterStatus | null
-          type?: ClusterType | null
-          mints?: Array<{
-            __typename?: 'Mint'
-            id?: string | null
-            createdAt?: any | null
-            updatedAt?: any | null
-            addMemo?: boolean | null
-            address?: string | null
-            airdropAmount?: number | null
-            airdropMax?: number | null
-            airdropPublicKey?: string | null
-            coinGeckoId?: string | null
-            decimals?: number | null
-            default?: boolean | null
-            enabled?: boolean | null
-            logoUrl?: string | null
-            name?: string | null
-            order?: number | null
-            symbol?: string | null
-            type?: MintType | null
-          }> | null
-        } | null
-        mints?: Array<{
-          __typename?: 'AppMint'
-          id: string
-          createdAt: any
-          updatedAt: any
-          addMemo?: boolean | null
-          order?: number | null
-          mint?: {
-            __typename?: 'Mint'
-            id?: string | null
-            createdAt?: any | null
-            updatedAt?: any | null
-            addMemo?: boolean | null
-            address?: string | null
-            airdropAmount?: number | null
-            airdropMax?: number | null
-            airdropPublicKey?: string | null
-            coinGeckoId?: string | null
-            decimals?: number | null
-            default?: boolean | null
-            enabled?: boolean | null
-            logoUrl?: string | null
-            name?: string | null
-            order?: number | null
-            symbol?: string | null
-            type?: MintType | null
-          } | null
-          wallet?: {
-            __typename?: 'Wallet'
-            id: string
-            createdAt?: any | null
-            updatedAt?: any | null
-            publicKey?: string | null
-            type?: WalletType | null
-          } | null
-        }> | null
-      } | null
-    }> | null
     appEnvs?: Array<{
       __typename?: 'AppEnv'
       id: string
@@ -5432,6 +5920,8 @@ export type AdminWalletsQuery = {
       ipsAllowed?: Array<string> | null
       ipsBlocked?: Array<string> | null
       name?: string | null
+      solanaTransactionMaxRetries?: number | null
+      solanaTransactionSkipPreflight?: boolean | null
       uasAllowed?: Array<string> | null
       uasBlocked?: Array<string> | null
       webhookBalanceEnabled?: boolean | null
@@ -5558,6 +6048,8 @@ export type UserGenerateWalletMutation = {
       ipsAllowed?: Array<string> | null
       ipsBlocked?: Array<string> | null
       name?: string | null
+      solanaTransactionMaxRetries?: number | null
+      solanaTransactionSkipPreflight?: boolean | null
       uasAllowed?: Array<string> | null
       uasBlocked?: Array<string> | null
       webhookBalanceEnabled?: boolean | null
@@ -5652,7 +6144,7 @@ export type UserGenerateWalletMutation = {
 
 export type UserImportWalletMutationVariables = Exact<{
   appEnvId: Scalars['String']
-  secretKey: Scalars['String']
+  secret: Scalars['String']
 }>
 
 export type UserImportWalletMutation = {
@@ -5753,34 +6245,7 @@ export type UserWalletBalanceQueryVariables = Exact<{
   walletId: Scalars['String']
 }>
 
-export type UserWalletBalanceQuery = {
-  __typename?: 'Query'
-  balance?: {
-    __typename?: 'WalletBalance'
-    id?: string | null
-    createdAt?: any | null
-    updatedAt?: any | null
-    balance?: any | null
-    change?: any | null
-  } | null
-}
-
-export type UserWalletBalancesQueryVariables = Exact<{
-  appEnvId: Scalars['String']
-  walletId: Scalars['String']
-}>
-
-export type UserWalletBalancesQuery = {
-  __typename?: 'Query'
-  balances?: Array<{
-    __typename?: 'WalletBalance'
-    id?: string | null
-    createdAt?: any | null
-    updatedAt?: any | null
-    balance?: any | null
-    change?: any | null
-  }> | null
-}
+export type UserWalletBalanceQuery = { __typename?: 'Query'; balance?: string | null }
 
 export type UserWalletsQueryVariables = Exact<{
   appEnvId: Scalars['String']
@@ -5921,6 +6386,8 @@ export const AppEnvDetailsFragmentDoc = gql`
       ...AppMintDetails
     }
     name
+    solanaTransactionMaxRetries
+    solanaTransactionSkipPreflight
     uasAllowed
     uasBlocked
     webhookBalanceEnabled
@@ -5993,8 +6460,7 @@ export const TransactionDetailsFragmentDoc = gql`
     ip
     mint
     processingDuration
-    referenceId
-    referenceType
+    reference
     signature
     solanaCommittedDuration
     solanaFinalized
@@ -6079,6 +6545,59 @@ export const AuthTokenDetailsFragmentDoc = gql`
   }
   ${UserDetailsFragmentDoc}
 `
+export const MigrationStatusDetailsFragmentDoc = gql`
+  fragment MigrationStatusDetails on MigrationStatus {
+    count
+    done
+  }
+`
+export const MigrationDetailsFragmentDoc = gql`
+  fragment MigrationDetails on Migration {
+    key
+    version
+    status {
+      ...MigrationStatusDetails
+    }
+  }
+  ${MigrationStatusDetailsFragmentDoc}
+`
+export const QueueCountDetailsFragmentDoc = gql`
+  fragment QueueCountDetails on QueueCount {
+    active
+    completed
+    delayed
+    failed
+    paused
+    waiting
+  }
+`
+export const QueueDetailsFragmentDoc = gql`
+  fragment QueueDetails on Queue {
+    type
+    name
+    count {
+      ...QueueCountDetails
+    }
+    info
+    isPaused
+  }
+  ${QueueCountDetailsFragmentDoc}
+`
+export const JobDetailsFragmentDoc = gql`
+  fragment JobDetails on Job {
+    id
+    data
+    opts
+    attemptsMade
+    processedOn
+    finishedOn
+    timestamp
+    name
+    stacktrace
+    returnvalue
+    failedReason
+  }
+`
 export const UserEmailDetailsFragmentDoc = gql`
   fragment UserEmailDetails on UserEmail {
     id
@@ -6090,15 +6609,6 @@ export const UserEmailDetailsFragmentDoc = gql`
 export const WalletAirdropResponseDetailsFragmentDoc = gql`
   fragment WalletAirdropResponseDetails on WalletAirdropResponse {
     signature
-  }
-`
-export const WalletBalanceDetailsFragmentDoc = gql`
-  fragment WalletBalanceDetails on WalletBalance {
-    id
-    createdAt
-    updatedAt
-    balance
-    change
   }
 `
 export const AdminCreateAppDocument = gql`
@@ -6347,7 +6857,7 @@ export function useUserAppUserUpdateRoleMutation() {
   )
 }
 export const UserAppEnvAddAllowedIpDocument = gql`
-  mutation userAppEnvAddAllowedIp($appEnvId: String!, $ip: String!) {
+  mutation UserAppEnvAddAllowedIp($appEnvId: String!, $ip: String!) {
     item: userAppEnvAddAllowedIp(appEnvId: $appEnvId, ip: $ip) {
       ...AppEnvDetails
     }
@@ -6361,7 +6871,7 @@ export function useUserAppEnvAddAllowedIpMutation() {
   )
 }
 export const UserAppEnvRemoveAllowedIpDocument = gql`
-  mutation userAppEnvRemoveAllowedIp($appEnvId: String!, $ip: String!) {
+  mutation UserAppEnvRemoveAllowedIp($appEnvId: String!, $ip: String!) {
     item: userAppEnvRemoveAllowedIp(appEnvId: $appEnvId, ip: $ip) {
       ...AppEnvDetails
     }
@@ -6375,7 +6885,7 @@ export function useUserAppEnvRemoveAllowedIpMutation() {
   )
 }
 export const UserAppEnvAddBlockedIpDocument = gql`
-  mutation userAppEnvAddBlockedIp($appEnvId: String!, $ip: String!) {
+  mutation UserAppEnvAddBlockedIp($appEnvId: String!, $ip: String!) {
     item: userAppEnvAddBlockedIp(appEnvId: $appEnvId, ip: $ip) {
       ...AppEnvDetails
     }
@@ -6389,7 +6899,7 @@ export function useUserAppEnvAddBlockedIpMutation() {
   )
 }
 export const UserAppEnvRemoveBlockedIpDocument = gql`
-  mutation userAppEnvRemoveBlockedIp($appEnvId: String!, $ip: String!) {
+  mutation UserAppEnvRemoveBlockedIp($appEnvId: String!, $ip: String!) {
     item: userAppEnvRemoveBlockedIp(appEnvId: $appEnvId, ip: $ip) {
       ...AppEnvDetails
     }
@@ -6403,7 +6913,7 @@ export function useUserAppEnvRemoveBlockedIpMutation() {
   )
 }
 export const UserAppEnvAddAllowedUaDocument = gql`
-  mutation userAppEnvAddAllowedUa($appEnvId: String!, $ua: String!) {
+  mutation UserAppEnvAddAllowedUa($appEnvId: String!, $ua: String!) {
     item: userAppEnvAddAllowedUa(appEnvId: $appEnvId, ua: $ua) {
       ...AppEnvDetails
     }
@@ -6417,7 +6927,7 @@ export function useUserAppEnvAddAllowedUaMutation() {
   )
 }
 export const UserAppEnvRemoveAllowedUaDocument = gql`
-  mutation userAppEnvRemoveAllowedUa($appEnvId: String!, $ua: String!) {
+  mutation UserAppEnvRemoveAllowedUa($appEnvId: String!, $ua: String!) {
     item: userAppEnvRemoveAllowedUa(appEnvId: $appEnvId, ua: $ua) {
       ...AppEnvDetails
     }
@@ -6431,7 +6941,7 @@ export function useUserAppEnvRemoveAllowedUaMutation() {
   )
 }
 export const UserAppEnvAddBlockedUaDocument = gql`
-  mutation userAppEnvAddBlockedUa($appEnvId: String!, $ua: String!) {
+  mutation UserAppEnvAddBlockedUa($appEnvId: String!, $ua: String!) {
     item: userAppEnvAddBlockedUa(appEnvId: $appEnvId, ua: $ua) {
       ...AppEnvDetails
     }
@@ -6445,7 +6955,7 @@ export function useUserAppEnvAddBlockedUaMutation() {
   )
 }
 export const UserAppEnvRemoveBlockedUaDocument = gql`
-  mutation userAppEnvRemoveBlockedUa($appEnvId: String!, $ua: String!) {
+  mutation UserAppEnvRemoveBlockedUa($appEnvId: String!, $ua: String!) {
     item: userAppEnvRemoveBlockedUa(appEnvId: $appEnvId, ua: $ua) {
       ...AppEnvDetails
     }
@@ -6456,6 +6966,20 @@ export const UserAppEnvRemoveBlockedUaDocument = gql`
 export function useUserAppEnvRemoveBlockedUaMutation() {
   return Urql.useMutation<UserAppEnvRemoveBlockedUaMutation, UserAppEnvRemoveBlockedUaMutationVariables>(
     UserAppEnvRemoveBlockedUaDocument,
+  )
+}
+export const UserAppEnvPurgeTransactionsDocument = gql`
+  mutation UserAppEnvPurgeTransactions($appEnvId: String!, $status: TransactionStatus) {
+    item: userAppEnvPurgeTransactions(appEnvId: $appEnvId, status: $status) {
+      ...AppEnvDetails
+    }
+  }
+  ${AppEnvDetailsFragmentDoc}
+`
+
+export function useUserAppEnvPurgeTransactionsMutation() {
+  return Urql.useMutation<UserAppEnvPurgeTransactionsMutation, UserAppEnvPurgeTransactionsMutationVariables>(
+    UserAppEnvPurgeTransactionsDocument,
   )
 }
 export const UserAppEnvMintDisableDocument = gql`
@@ -6487,7 +7011,7 @@ export function useUserAppEnvMintEnableMutation() {
   )
 }
 export const UserAppEnvMintSetWalletDocument = gql`
-  mutation userAppEnvMintSetWallet($appId: String!, $appEnvId: String!, $mintId: String!, $walletId: String!) {
+  mutation UserAppEnvMintSetWallet($appId: String!, $appEnvId: String!, $mintId: String!, $walletId: String!) {
     item: userAppEnvMintSetWallet(appId: $appId, appEnvId: $appEnvId, mintId: $mintId, walletId: $walletId) {
       ...AppEnvDetails
     }
@@ -6690,6 +7214,32 @@ export const AdminMintCreateDocument = gql`
 export function useAdminMintCreateMutation() {
   return Urql.useMutation<AdminMintCreateMutation, AdminMintCreateMutationVariables>(AdminMintCreateDocument)
 }
+export const AdminDeleteMintDocument = gql`
+  mutation AdminDeleteMint($mintId: String!) {
+    deleted: adminDeleteMint(mintId: $mintId) {
+      ...MintDetails
+    }
+  }
+  ${MintDetailsFragmentDoc}
+`
+
+export function useAdminDeleteMintMutation() {
+  return Urql.useMutation<AdminDeleteMintMutation, AdminDeleteMintMutationVariables>(AdminDeleteMintDocument)
+}
+export const AdminMintImportWalletDocument = gql`
+  mutation AdminMintImportWallet($mintId: String!, $secret: String!) {
+    adminMintImportWallet(mintId: $mintId, secret: $secret) {
+      ...MintDetails
+    }
+  }
+  ${MintDetailsFragmentDoc}
+`
+
+export function useAdminMintImportWalletMutation() {
+  return Urql.useMutation<AdminMintImportWalletMutation, AdminMintImportWalletMutationVariables>(
+    AdminMintImportWalletDocument,
+  )
+}
 export const AdminCreateClusterDocument = gql`
   mutation AdminCreateCluster($input: AdminClusterCreateInput!) {
     created: adminCreateCluster(input: $input) {
@@ -6746,12 +7296,16 @@ export const AdminClustersDocument = gql`
   query AdminClusters {
     items: adminClusters {
       ...ClusterDetails
+      envs {
+        ...AppEnvDetails
+      }
       mints {
         ...MintDetails
       }
     }
   }
   ${ClusterDetailsFragmentDoc}
+  ${AppEnvDetailsFragmentDoc}
   ${MintDetailsFragmentDoc}
 `
 
@@ -6812,6 +7366,119 @@ export const UptimeDocument = gql`
 
 export function useUptimeQuery(options?: Omit<Urql.UseQueryArgs<UptimeQueryVariables>, 'query'>) {
   return Urql.useQuery<UptimeQuery, UptimeQueryVariables>({ query: UptimeDocument, ...options })
+}
+export const AdminMigrationsDocument = gql`
+  query AdminMigrations {
+    items: adminMigrations {
+      ...MigrationDetails
+    }
+  }
+  ${MigrationDetailsFragmentDoc}
+`
+
+export function useAdminMigrationsQuery(options?: Omit<Urql.UseQueryArgs<AdminMigrationsQueryVariables>, 'query'>) {
+  return Urql.useQuery<AdminMigrationsQuery, AdminMigrationsQueryVariables>({
+    query: AdminMigrationsDocument,
+    ...options,
+  })
+}
+export const AdminMigrateDocument = gql`
+  mutation AdminMigrate($key: String!) {
+    item: adminMigrate(key: $key) {
+      ...MigrationStatusDetails
+    }
+  }
+  ${MigrationStatusDetailsFragmentDoc}
+`
+
+export function useAdminMigrateMutation() {
+  return Urql.useMutation<AdminMigrateMutation, AdminMigrateMutationVariables>(AdminMigrateDocument)
+}
+export const AdminQueuesDocument = gql`
+  query AdminQueues {
+    items: adminQueues {
+      ...QueueDetails
+    }
+  }
+  ${QueueDetailsFragmentDoc}
+`
+
+export function useAdminQueuesQuery(options?: Omit<Urql.UseQueryArgs<AdminQueuesQueryVariables>, 'query'>) {
+  return Urql.useQuery<AdminQueuesQuery, AdminQueuesQueryVariables>({ query: AdminQueuesDocument, ...options })
+}
+export const AdminQueueDocument = gql`
+  query AdminQueue($type: QueueType!) {
+    item: adminQueue(type: $type) {
+      ...QueueDetails
+    }
+  }
+  ${QueueDetailsFragmentDoc}
+`
+
+export function useAdminQueueQuery(options: Omit<Urql.UseQueryArgs<AdminQueueQueryVariables>, 'query'>) {
+  return Urql.useQuery<AdminQueueQuery, AdminQueueQueryVariables>({ query: AdminQueueDocument, ...options })
+}
+export const AdminQueueJobsDocument = gql`
+  query AdminQueueJobs($type: QueueType!, $statuses: [JobStatus!]!) {
+    items: adminQueueJobs(type: $type, statuses: $statuses) {
+      ...JobDetails
+    }
+  }
+  ${JobDetailsFragmentDoc}
+`
+
+export function useAdminQueueJobsQuery(options: Omit<Urql.UseQueryArgs<AdminQueueJobsQueryVariables>, 'query'>) {
+  return Urql.useQuery<AdminQueueJobsQuery, AdminQueueJobsQueryVariables>({ query: AdminQueueJobsDocument, ...options })
+}
+export const AdminQueueLoadDocument = gql`
+  mutation AdminQueueLoad($input: AdminQueueLoadInput!) {
+    loaded: adminQueueLoad(input: $input) {
+      ...QueueDetails
+    }
+  }
+  ${QueueDetailsFragmentDoc}
+`
+
+export function useAdminQueueLoadMutation() {
+  return Urql.useMutation<AdminQueueLoadMutation, AdminQueueLoadMutationVariables>(AdminQueueLoadDocument)
+}
+export const AdminQueueCleanDocument = gql`
+  mutation AdminQueueClean($type: QueueType!, $status: JobStatus) {
+    paused: adminQueueClean(type: $type, status: $status)
+  }
+`
+
+export function useAdminQueueCleanMutation() {
+  return Urql.useMutation<AdminQueueCleanMutation, AdminQueueCleanMutationVariables>(AdminQueueCleanDocument)
+}
+export const AdminQueueDeleteJobDocument = gql`
+  mutation AdminQueueDeleteJob($type: QueueType!, $jobId: String!) {
+    paused: adminQueueDeleteJob(type: $type, jobId: $jobId)
+  }
+`
+
+export function useAdminQueueDeleteJobMutation() {
+  return Urql.useMutation<AdminQueueDeleteJobMutation, AdminQueueDeleteJobMutationVariables>(
+    AdminQueueDeleteJobDocument,
+  )
+}
+export const AdminQueuePauseDocument = gql`
+  mutation AdminQueuePause($type: QueueType!) {
+    paused: adminQueuePause(type: $type)
+  }
+`
+
+export function useAdminQueuePauseMutation() {
+  return Urql.useMutation<AdminQueuePauseMutation, AdminQueuePauseMutationVariables>(AdminQueuePauseDocument)
+}
+export const AdminQueueResumeDocument = gql`
+  mutation adminQueueResume($type: QueueType!) {
+    resumed: adminQueueResume(type: $type)
+  }
+`
+
+export function useAdminQueueResumeMutation() {
+  return Urql.useMutation<AdminQueueResumeMutation, AdminQueueResumeMutationVariables>(AdminQueueResumeDocument)
 }
 export const AdminCreateUserDocument = gql`
   mutation AdminCreateUser($input: AdminUserCreateInput!) {
@@ -6928,33 +7595,10 @@ export const AdminWalletDocument = gql`
 export function useAdminWalletQuery(options: Omit<Urql.UseQueryArgs<AdminWalletQueryVariables>, 'query'>) {
   return Urql.useQuery<AdminWalletQuery, AdminWalletQueryVariables>({ query: AdminWalletDocument, ...options })
 }
-export const AdminWalletBalancesDocument = gql`
-  query AdminWalletBalances($appEnvId: String!, $walletId: String!) {
-    balances: adminWalletBalances(appEnvId: $appEnvId, walletId: $walletId) {
-      ...WalletBalanceDetails
-    }
-  }
-  ${WalletBalanceDetailsFragmentDoc}
-`
-
-export function useAdminWalletBalancesQuery(
-  options: Omit<Urql.UseQueryArgs<AdminWalletBalancesQueryVariables>, 'query'>,
-) {
-  return Urql.useQuery<AdminWalletBalancesQuery, AdminWalletBalancesQueryVariables>({
-    query: AdminWalletBalancesDocument,
-    ...options,
-  })
-}
 export const AdminWalletsDocument = gql`
   query AdminWallets {
     items: adminWallets {
       ...WalletDetails
-      balances {
-        ...WalletBalanceDetails
-        appEnv {
-          ...AppEnvDetails
-        }
-      }
       appEnvs {
         ...AppEnvDetails
       }
@@ -6964,7 +7608,6 @@ export const AdminWalletsDocument = gql`
     }
   }
   ${WalletDetailsFragmentDoc}
-  ${WalletBalanceDetailsFragmentDoc}
   ${AppEnvDetailsFragmentDoc}
   ${UserDetailsFragmentDoc}
 `
@@ -6989,8 +7632,8 @@ export function useUserGenerateWalletMutation() {
   return Urql.useMutation<UserGenerateWalletMutation, UserGenerateWalletMutationVariables>(UserGenerateWalletDocument)
 }
 export const UserImportWalletDocument = gql`
-  mutation UserImportWallet($appEnvId: String!, $secretKey: String!) {
-    generated: userImportWallet(appEnvId: $appEnvId, secretKey: $secretKey) {
+  mutation UserImportWallet($appEnvId: String!, $secret: String!) {
+    generated: userImportWallet(appEnvId: $appEnvId, secret: $secret) {
       ...WalletDetails
     }
   }
@@ -7045,33 +7688,13 @@ export function useUserWalletAirdropQuery(options: Omit<Urql.UseQueryArgs<UserWa
 }
 export const UserWalletBalanceDocument = gql`
   query UserWalletBalance($appEnvId: String!, $walletId: String!) {
-    balance: userWalletBalance(appEnvId: $appEnvId, walletId: $walletId) {
-      ...WalletBalanceDetails
-    }
+    balance: userWalletBalance(appEnvId: $appEnvId, walletId: $walletId)
   }
-  ${WalletBalanceDetailsFragmentDoc}
 `
 
 export function useUserWalletBalanceQuery(options: Omit<Urql.UseQueryArgs<UserWalletBalanceQueryVariables>, 'query'>) {
   return Urql.useQuery<UserWalletBalanceQuery, UserWalletBalanceQueryVariables>({
     query: UserWalletBalanceDocument,
-    ...options,
-  })
-}
-export const UserWalletBalancesDocument = gql`
-  query UserWalletBalances($appEnvId: String!, $walletId: String!) {
-    balances: userWalletBalances(appEnvId: $appEnvId, walletId: $walletId) {
-      ...WalletBalanceDetails
-    }
-  }
-  ${WalletBalanceDetailsFragmentDoc}
-`
-
-export function useUserWalletBalancesQuery(
-  options: Omit<Urql.UseQueryArgs<UserWalletBalancesQueryVariables>, 'query'>,
-) {
-  return Urql.useQuery<UserWalletBalancesQuery, UserWalletBalancesQueryVariables>({
-    query: UserWalletBalancesDocument,
     ...options,
   })
 }

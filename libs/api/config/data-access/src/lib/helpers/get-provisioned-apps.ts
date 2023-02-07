@@ -12,9 +12,12 @@ export function getProvisionedApps(envVars: string[]): ProvisionedApp[] {
     .map((id) => Number(id))
 
   return appIds.map((index) => ({
-    feePayerByteArray: JSON.parse(process.env[`APP_${index}_FEE_PAYER_BYTE_ARRAY`]),
+    secret: process.env[`APP_${index}_FEE_PAYER_SECRET`] || process.env[`APP_${index}_FEE_PAYER_BYTE_ARRAY`],
     index,
     name: process.env[`APP_${index}_NAME`],
     logoUrl: process.env[`APP_${index}_LOGO_URL`],
+    enableWebhooks: process.env[`APP_${index}_ENABLE_WEBHOOKS`]
+      ? process.env[`APP_${index}_ENABLE_WEBHOOKS`].toString().toLowerCase() === 'true'
+      : false,
   }))
 }

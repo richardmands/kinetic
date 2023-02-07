@@ -1,18 +1,13 @@
 import { ApiAuthGraphqlGuard, CtxUser } from '@kin-kinetic/api/auth/data-access'
 import { User } from '@kin-kinetic/api/user/data-access'
-import {
-  ApiWalletUserDataAccessService,
-  Wallet,
-  WalletAirdropResponse,
-  WalletBalance,
-} from '@kin-kinetic/api/wallet/data-access'
+import { ApiWalletUserService, Wallet, WalletAirdropResponse } from '@kin-kinetic/api/wallet/data-access'
 import { UseGuards } from '@nestjs/common'
 import { Args, Float, Mutation, Query, Resolver } from '@nestjs/graphql'
 
 @Resolver()
 @UseGuards(ApiAuthGraphqlGuard)
 export class ApiWalletUserFeatureResolver {
-  constructor(private readonly service: ApiWalletUserDataAccessService) {}
+  constructor(private readonly service: ApiWalletUserService) {}
 
   @Mutation(() => Wallet, { nullable: true })
   userGenerateWallet(@CtxUser() user: User, @Args('appEnvId') appEnvId: string) {
@@ -20,8 +15,8 @@ export class ApiWalletUserFeatureResolver {
   }
 
   @Mutation(() => Wallet, { nullable: true })
-  userImportWallet(@CtxUser() user: User, @Args('appEnvId') appEnvId: string, @Args('secretKey') secretKey: string) {
-    return this.service.userImportWallet(user.id, appEnvId, secretKey)
+  userImportWallet(@CtxUser() user: User, @Args('appEnvId') appEnvId: string, @Args('secret') secret: string) {
+    return this.service.userImportWallet(user.id, appEnvId, secret)
   }
 
   @Mutation(() => Wallet, { nullable: true })
@@ -44,14 +39,9 @@ export class ApiWalletUserFeatureResolver {
     return this.service.userWalletAirdrop(user.id, appEnvId, walletId, amount)
   }
 
-  @Query(() => WalletBalance, { nullable: true })
+  @Query(() => String, { nullable: true })
   userWalletBalance(@CtxUser() user: User, @Args('appEnvId') appEnvId: string, @Args('walletId') walletId: string) {
     return this.service.userWalletBalance(user.id, appEnvId, walletId)
-  }
-
-  @Query(() => [WalletBalance], { nullable: true })
-  userWalletBalances(@CtxUser() user: User, @Args('appEnvId') appEnvId: string, @Args('walletId') walletId: string) {
-    return this.service.userWalletBalances(user.id, appEnvId, walletId)
   }
 
   @Query(() => [Wallet], { nullable: true })

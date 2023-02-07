@@ -1,25 +1,32 @@
-import { ApiConfigDataAccessService } from '@kin-kinetic/api/config/data-access'
+import { ApiConfigService } from '@kin-kinetic/api/config/data-access'
 import { OpenTelemetrySdk } from '@kin-kinetic/api/core/util'
 import { Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { OgmaService } from '@ogma/nestjs-module'
 import { exec } from 'child_process'
 import cookieParser from 'cookie-parser'
+import { json } from 'express'
 import redirectSSL from 'redirect-ssl'
 import { AppModule } from './app/app.module'
 
+process.on('unhandledRejection', (reason, promise) => {
+  console.log('UNHANDLED REJECTION at:', promise, 'reason:', reason)
+})
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true })
-  const config = app.get(ApiConfigDataAccessService)
+  const config = app.get(ApiConfigService)
   const logger = app.get<OgmaService>(OgmaService)
   app.useLogger(logger)
   await OpenTelemetrySdk.start(config.metricsConfig)
   app.setGlobalPrefix(config.prefix)
-  app.useGlobalPipes(new ValidationPipe({ transform: true }))
+  app.useGlobalPipes(new ValidationPipe({ forbidUnknownValues: false, transform: true }))
   app.enableCors(config.cors)
   app.use(redirectSSL.create({ enabled: config.isProduction }))
   config.configureSwagger(app)
   app.use(cookieParser())
+  // TODO: Make this limit configurable
+  app.use(json({ limit: '10mb' }))
   const host = `http://${config.host}:${config.port}`
   try {
     await app.listen(config.port, config.host)

@@ -5,7 +5,7 @@ import { WebAppUiSettingsLayout } from '@kin-kinetic/web/app/ui'
 import { WebUiAlert } from '@kin-kinetic/web/ui/alert'
 import { WebUiContainer } from '@kin-kinetic/web/ui/container'
 import { WebUiLinks } from '@kin-kinetic/web/ui/link'
-import { WebUiPageBackButton, WebUiPageFull, WebUiPageHeader } from '@kin-kinetic/web/ui/page'
+import { WebUiPageBackButton, WebUiPageHeader } from '@kin-kinetic/web/ui/page'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { WebAppSettingsEnvironmentsTab } from './web-app-settings-environments-tab'
 import { WebAppSettingsGeneralTab } from './web-app-settings-general-tab'
@@ -24,9 +24,12 @@ export function WebAppSettings() {
     { label: 'Users', path: 'users' },
   ]
   return (
-    <WebUiPageFull title="App settings" to={`/apps/${app.defaultEnvUrl}`}>
-      <WebAppUiSettingsLayout links={links}>
-        <WebUiContainer py={0}>
+    <Box h="100%">
+      <Box p={4} borderBottom={'1px'} borderColor={borderColor}>
+        <WebUiPageHeader actionLeft={<WebUiPageBackButton to={`/apps/${app.defaultEnvUrl}`} />} title="App settings" />
+      </Box>
+      <WebAppUiSettingsLayout links={links} title="App Settings">
+        <WebUiContainer py={4}>
           <Routes>
             <Route index element={<Navigate to="general" replace />} />
             <Route path="environments" element={<WebAppSettingsEnvironmentsTab app={app} />} />
@@ -35,6 +38,6 @@ export function WebAppSettings() {
           </Routes>
         </WebUiContainer>
       </WebAppUiSettingsLayout>
-    </WebUiPageFull>
+    </Box>
   )
 }

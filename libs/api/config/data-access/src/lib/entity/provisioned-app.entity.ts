@@ -1,6 +1,7 @@
 export interface ProvisionedApp {
-  feePayerByteArray: number[]
+  enableWebhooks: boolean
   index: number
   logoUrl?: string
   name: string
+  secret: string
 }

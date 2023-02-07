@@ -1,14 +1,19 @@
 import { NAME, VERSION } from '@kin-kinetic/api/core/data-access'
 
-// Get the origins from the ENV
-const origins: string[] = process.env.CORS_ORIGINS?.includes(',')
-  ? process.env.CORS_ORIGINS?.split(',')
-  : [process.env.CORS_ORIGINS]
+// Remove trailing slashes from the URLs to avoid double slashes
+const API_URL = getUrl('API_URL')
+// Infer the WEB URL from the API_URL if it's not set
+const WEB_URL = getUrl('WEB_URL') ?? API_URL?.replace('/api', '')
 
-// Get the cookie domains from the ENV
-const domains: string[] = process.env.COOKIE_DOMAINS?.includes(',')
-  ? process.env.COOKIE_DOMAINS?.split(',')
-  : [process.env.COOKIE_DOMAINS]
+const domains: string[] = getCookieDomains()
+
+// Infer the cookie domain from the API_URL if it's not set
+if (!domains.length) {
+  const { hostname } = new URL(API_URL)
+  domains.push(hostname)
+}
+
+const origins: string[] = getCorsOrigins()
 
 export default () => ({
   api: {
@@ -18,15 +23,25 @@ export default () => ({
       level: process.env.LOG_LEVEL,
     },
     name: NAME,
-    url: process.env.API_URL,
+    url: API_URL,
     version: VERSION,
   },
   auth: {
     passwordEnabled: process.env.AUTH_PASSWORD_ENABLED?.toLowerCase() !== 'false',
     users: process.env.AUTH_USERS || '',
   },
+  cache: {
+    solana: {
+      getLatestBlockhash: {
+        ttl: process.env.CACHE_SOLANA_GET_LATEST_BLOCKHASH_TTL,
+      },
+      getTokenAccounts: {
+        ttl: process.env.CACHE_SOLANA_GET_TOKEN_ACCOUNTS_TTL,
+      },
+    },
+  },
   cors: {
-    bypass: process.env.CORS_BYPASS?.toLowerCase() !== 'false',
+    bypass: !origins.length,
     origins,
   },
   cookie: {
@@ -59,6 +74,15 @@ export default () => ({
     port: parseInt(process.env.METRICS_PORT, 10),
   },
   port: parseInt(process.env.PORT, 10),
+  queue: {
+    closeAccount: {
+      concurrency: Number(process.env.QUEUE_CLOSE_ACCOUNT_CONCURRENCY ?? '1'),
+      start: process.env.QUEUE_CLOSE_ACCOUNT_START?.toLowerCase() !== 'false',
+    },
+  },
+  redis: {
+    url: process.env.REDIS_URL,
+  },
   solana: {
     devnet: {
       enabled: process.env.SOLANA_DEVNET_ENABLED?.toLowerCase() !== 'false',
@@ -74,6 +98,25 @@ export default () => ({
     },
   },
   web: {
-    url: process.env.WEB_URL,
+    url: WEB_URL,
   },
 })
+
+// Get the cookie domains from the ENV
+function getCookieDomains() {
+  return getFromEnvironment('COOKIE_DOMAINS').filter(Boolean)
+}
+
+// Get the origins from the ENV
+function getCorsOrigins() {
+  return getFromEnvironment('CORS_ORIGINS').filter(Boolean)
+}
+
+// Get the values from the ENV
+function getFromEnvironment(key: string) {
+  return process.env[key]?.includes(',') ? process.env[key]?.split(',') : [process.env[key]]
+}
+
+function getUrl(key: string) {
+  return process.env[key]?.replace(/\/$/, '')
+}

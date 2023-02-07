@@ -20,32 +20,34 @@ model App {
 }
 
 model AppEnv {
-  id                      String          @id @default(cuid())
-  createdAt               DateTime        @default(now())
-  updatedAt               DateTime        @updatedAt
-  name                    String
-  ipsAllowed              String[]
-  ipsBlocked              String[]
-  mints                   AppMint[]
-  transaction             Transaction[]
-  uasAllowed              String[]
-  uasBlocked              String[]
-  webhookBalanceEnabled   Boolean         @default(false)
-  webhookBalanceUrl       String?
-  webhookBalanceThreshold String?
-  webhookDebugging        Boolean         @default(false)
-  webhookEventEnabled     Boolean         @default(false)
-  webhookEventUrl         String?
-  webhookSecret           String?
-  webhookVerifyEnabled    Boolean         @default(false)
-  webhookVerifyUrl        String?
-  webhooks                Webhook[]
-  app                     App             @relation(fields: [appId], references: [id])
-  appId                   String
-  cluster                 Cluster         @relation(fields: [clusterId], references: [id])
-  clusterId               String
-  walletBalances          WalletBalance[]
-  wallets                 Wallet[]
+  id                             String          @id @default(cuid())
+  createdAt                      DateTime        @default(now())
+  updatedAt                      DateTime        @updatedAt
+  name                           String
+  ipsAllowed                     String[]
+  ipsBlocked                     String[]
+  mints                          AppMint[]
+  solanaTransactionMaxRetries    Int             @default(0)
+  solanaTransactionSkipPreflight Boolean         @default(false)
+  transaction                    Transaction[]
+  uasAllowed                     String[]
+  uasBlocked                     String[]
+  webhookBalanceEnabled          Boolean         @default(false)
+  webhookBalanceUrl              String?
+  webhookBalanceThreshold        String?
+  webhookDebugging               Boolean         @default(false)
+  webhookEventEnabled            Boolean         @default(false)
+  webhookEventUrl                String?
+  webhookSecret                  String?
+  webhookVerifyEnabled           Boolean         @default(false)
+  webhookVerifyUrl               String?
+  webhooks                       Webhook[]
+  app                            App             @relation(fields: [appId], references: [id])
+  appId                          String
+  cluster                        Cluster         @relation(fields: [clusterId], references: [id])
+  clusterId                      String
+  walletBalances                 WalletBalance[]
+  wallets                        Wallet[]
 
   @@unique([appId, name])
 }
@@ -146,15 +148,22 @@ model Transaction {
   createdAt               DateTime               @default(now())
   updatedAt               DateTime               @updatedAt
   amount                  String?
+  appKey                  String?
+  blockhash               String?
   commitment              TransactionCommitment?
   decimals                Int?
   destination             String?
   errors                  TransactionError[]
   feePayer                String?
+  headers                 Json?
   ip                      String?
+  lastValidBlockHeight    Int?
   mint                    String?
   processingDuration      Int?
+  reference               String?
+  // Deprecated in v1.0.0
   referenceId             String?
+  // Deprecated in v1.0.0
   referenceType           String?
   signature               String?
   solanaCommitted         DateTime?
@@ -279,6 +288,7 @@ enum WalletType {
   Provisioned
 }
 
+// Deprecated in v1.0.0
 model WalletBalance {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
@@ -298,6 +308,7 @@ model Webhook {
   direction       WebhookDirection
   headers         Json?
   payload         Json?
+  reference       String?
   referenceId     String?
   referenceType   String?
   responsePayload Json?

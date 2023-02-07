@@ -1,5 +1,7 @@
-import { ApiAppEnvUserDataAccessService, AppEnv, AppEnvStats } from '@kin-kinetic/api/app/data-access'
+import { ApiAppEnvUserService, AppEnv, AppEnvStats } from '@kin-kinetic/api/app/data-access'
 import { ApiAuthGraphqlGuard, CtxUser } from '@kin-kinetic/api/auth/data-access'
+import { getAppKey } from '@kin-kinetic/api/core/util'
+import { TransactionStatus } from '@kin-kinetic/api/transaction/data-access'
 import { User } from '@kin-kinetic/api/user/data-access'
 import { Wallet } from '@kin-kinetic/api/wallet/data-access'
 import { UseGuards } from '@nestjs/common'
@@ -8,7 +10,7 @@ import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/g
 @Resolver(() => AppEnv)
 @UseGuards(ApiAuthGraphqlGuard)
 export class ApiAppEnvUserFeatureResolver {
-  constructor(private readonly service: ApiAppEnvUserDataAccessService) {}
+  constructor(private readonly service: ApiAppEnvUserService) {}
 
   @Query(() => AppEnvStats, { nullable: true })
   userAppEnvStats(@Args('appEnvId') appEnvId: string) {
@@ -56,6 +58,14 @@ export class ApiAppEnvUserFeatureResolver {
   }
 
   @Mutation(() => AppEnv, { nullable: true })
+  userAppEnvPurgeTransactions(
+    @Args('appEnvId') appEnvId: string,
+    @Args('status', { type: () => TransactionStatus, nullable: true }) status: TransactionStatus,
+  ) {
+    return this.service.userAppEnvPurgeTransactions(appEnvId, status)
+  }
+
+  @Mutation(() => AppEnv, { nullable: true })
   userDeleteAppEnv(@CtxUser() user: User, @Args('appId') appId: string, @Args('appEnvId') appEnvId: string) {
     return this.service.userDeleteAppEnv(user.id, appId, appEnvId)
   }
@@ -67,7 +77,7 @@ export class ApiAppEnvUserFeatureResolver {
 
   @ResolveField(() => String, { nullable: true })
   key(@Parent() appEnv: AppEnv) {
-    return this.service.getAppKey(appEnv?.name, appEnv?.app?.index)
+    return getAppKey(appEnv?.name, appEnv?.app?.index)
   }
 
   @ResolveField(() => [Wallet], { nullable: true })
